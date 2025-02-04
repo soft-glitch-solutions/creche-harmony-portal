@@ -1,7 +1,7 @@
+import { useEffect } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { useEffect } from 'react';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
@@ -18,11 +18,11 @@ export function SouthAfricaMap() {
   }, []);
 
   return (
-    <div className="h-[400px] w-full rounded-lg overflow-hidden">
+    <div className="h-[400px] w-full">
       <MapContainer
         center={[-30.5595, 22.9375]}
         zoom={5}
-        className="h-full w-full"
+        style={{ height: '100%', width: '100%' }}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
