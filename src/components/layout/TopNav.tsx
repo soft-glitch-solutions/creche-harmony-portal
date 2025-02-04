@@ -1,4 +1,4 @@
-import { Home, PieChart, Users, Settings, Map, FileText, Tool } from "lucide-react";
+import { Home, PieChart, Users, Settings, Map, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   NavigationMenu,
