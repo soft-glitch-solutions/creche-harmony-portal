@@ -1,4 +1,4 @@
-import { Home, PieChart, Users, Settings, Map, FileText } from "lucide-react";
+import { Home, PieChart, Users, Settings, Map, LifeBuoy } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   NavigationMenu,
@@ -69,6 +69,13 @@ export function TopNav() {
                 <Link to="/statmaps" className="flex items-center space-x-2 text-gray-600 hover:text-primary-800 px-4 py-2">
                   <Map className="h-4 w-4" />
                   <span>StatMaps</span>
+                </Link>
+              </NavigationMenuItem>
+
+              <NavigationMenuItem>
+                <Link to="/support" className="flex items-center space-x-2 text-gray-600 hover:text-primary-800 px-4 py-2">
+                  <LifeBuoy className="h-4 w-4" />
+                  <span>Support</span>
                 </Link>
               </NavigationMenuItem>
 
