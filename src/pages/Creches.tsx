@@ -17,15 +17,15 @@ const Creches = () => {
   const { data: creches, isLoading } = useQuery({
     queryKey: ["creches"],
     queryFn: async () => {
-      console.log("Fetching creches...");
       try {
+        console.log("Fetching creches...");
         const { data, error } = await supabase
           .from("creches")
           .select("*")
           .order("name");
 
         if (error) {
-          console.error("Error fetching creches:", error);
+          console.error("Supabase error:", error);
           toast({
             title: "Error",
             description: "Failed to load creches. Please try again later.",
@@ -34,10 +34,10 @@ const Creches = () => {
           return [];
         }
 
-        console.log("Fetched creches:", data);
+        console.log("Fetched creches successfully:", data);
         return data || [];
       } catch (error) {
-        console.error("Error fetching creches:", error);
+        console.error("Error in query function:", error);
         toast({
           title: "Error",
           description: "Failed to load creches. Please try again later.",
@@ -46,6 +46,8 @@ const Creches = () => {
         return [];
       }
     },
+    retry: 2,
+    retryDelay: 1000,
   });
 
   const filteredCreches = creches?.filter((creche) => {
