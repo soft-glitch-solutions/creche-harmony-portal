@@ -5,7 +5,6 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { SouthAfricaMap } from "@/components/map/SouthAfricaMap";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -81,7 +80,7 @@ const Creches = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {isLoading ? (
           <div className="col-span-full flex justify-center items-center py-8">
             <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
@@ -120,16 +119,16 @@ const Creches = () => {
                     <span className="block">✉️ {creche.email}</span>
                   )}
                 </p>
+                <div className="mt-4">
+                  <p className="text-sm font-semibold">Plan: {creche.plan}</p>
+                  <p className="text-sm">Monthly Price: R{creche.monthly_price}</p>
+                  <p className="text-sm">Weekly Price: R{creche.weekly_price}</p>
+                </div>
               </CardContent>
             </Card>
           ))
         )}
       </div>
-
-      <Card className="p-6">
-        <h2 className="text-xl font-semibold mb-4">Creche Locations</h2>
-        <SouthAfricaMap />
-      </Card>
     </div>
   );
 };

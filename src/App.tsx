@@ -8,7 +8,6 @@ import Index from "./pages/Index";
 import Reports from "./pages/Reports";
 import Creches from "./pages/Creches";
 import Settings from "./pages/Settings";
-import StatMaps from "./pages/StatMaps";
 import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
 
@@ -26,7 +25,6 @@ const App = () => (
           <Route path="/reports" element={<Reports />} />
           <Route path="/creches" element={<Creches />} />
           <Route path="/settings" element={<Settings />} />
-          <Route path="/statmaps" element={<StatMaps />} />
           <Route path="/support" element={<Support />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
