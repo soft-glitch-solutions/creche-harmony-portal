@@ -6,26 +6,45 @@ import { Label } from "@/components/ui/label";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { SouthAfricaMap } from "@/components/map/SouthAfricaMap";
+import { Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 const Creches = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showRegisteredOnly, setShowRegisteredOnly] = useState(false);
+  const { toast } = useToast();
 
   const { data: creches, isLoading } = useQuery({
     queryKey: ["creches"],
     queryFn: async () => {
       console.log("Fetching creches...");
-      const { data, error } = await supabase
-        .from("creches")
-        .select("*")
-        .order("name");
+      try {
+        const { data, error } = await supabase
+          .from("creches")
+          .select("*")
+          .order("name");
 
-      if (error) {
+        if (error) {
+          console.error("Error fetching creches:", error);
+          toast({
+            title: "Error",
+            description: "Failed to load creches. Please try again later.",
+            variant: "destructive",
+          });
+          return [];
+        }
+
+        console.log("Fetched creches:", data);
+        return data || [];
+      } catch (error) {
         console.error("Error fetching creches:", error);
-        throw error;
+        toast({
+          title: "Error",
+          description: "Failed to load creches. Please try again later.",
+          variant: "destructive",
+        });
+        return [];
       }
-      console.log("Fetched creches:", data);
-      return data;
     },
   });
 
@@ -62,7 +81,13 @@ const Creches = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         {isLoading ? (
-          <p>Loading creches...</p>
+          <div className="col-span-full flex justify-center items-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+          </div>
+        ) : filteredCreches?.length === 0 ? (
+          <div className="col-span-full text-center py-8 text-gray-500">
+            No creches found
+          </div>
         ) : (
           filteredCreches?.map((creche) => (
             <Card key={creche.id} className="overflow-hidden">
