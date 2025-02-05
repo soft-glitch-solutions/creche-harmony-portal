@@ -7,6 +7,7 @@ import { TopNav } from "./components/layout/TopNav";
 import Index from "./pages/Index";
 import Reports from "./pages/Reports";
 import Creches from "./pages/Creches";
+import CreheDetails from "./pages/CreheDetails";
 import Settings from "./pages/Settings";
 import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/creches" element={<Creches />} />
+          <Route path="/creches/:id" element={<CreheDetails />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/support" element={<Support />} />
           <Route path="*" element={<NotFound />} />

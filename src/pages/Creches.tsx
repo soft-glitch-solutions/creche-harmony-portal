@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 
 const Creches = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -91,41 +92,43 @@ const Creches = () => {
           </div>
         ) : (
           filteredCreches?.map((creche) => (
-            <Card key={creche.id} className="overflow-hidden">
-              <div className="h-48 overflow-hidden">
-                <img
-                  src={creche.header_image || "/placeholder.svg"}
-                  alt={creche.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>{creche.name}</span>
-                  {creche.registered && (
-                    <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">
-                      Registered
-                    </span>
-                  )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-600 mb-2">{creche.address}</p>
-                <p className="text-sm text-gray-600">
-                  {creche.phone_number && (
-                    <span className="block">📞 {creche.phone_number}</span>
-                  )}
-                  {creche.email && (
-                    <span className="block">✉️ {creche.email}</span>
-                  )}
-                </p>
-                <div className="mt-4">
-                  <p className="text-sm font-semibold">Plan: {creche.plan}</p>
-                  <p className="text-sm">Monthly Price: R{creche.monthly_price}</p>
-                  <p className="text-sm">Weekly Price: R{creche.weekly_price}</p>
+            <Link key={creche.id} to={`/creches/${creche.id}`}>
+              <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+                <div className="h-48 overflow-hidden">
+                  <img
+                    src={creche.header_image || "/placeholder.svg"}
+                    alt={creche.name}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-              </CardContent>
-            </Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>{creche.name}</span>
+                    {creche.registered && (
+                      <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">
+                        Registered
+                      </span>
+                    )}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-600 mb-2">{creche.address}</p>
+                  <p className="text-sm text-gray-600">
+                    {creche.phone_number && (
+                      <span className="block">📞 {creche.phone_number}</span>
+                    )}
+                    {creche.email && (
+                      <span className="block">✉️ {creche.email}</span>
+                    )}
+                  </p>
+                  <div className="mt-4">
+                    <p className="text-sm font-semibold">Plan: {creche.plan}</p>
+                    <p className="text-sm">Monthly Price: R{creche.monthly_price}</p>
+                    <p className="text-sm">Weekly Price: R{creche.weekly_price}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
           ))
         )}
       </div>
