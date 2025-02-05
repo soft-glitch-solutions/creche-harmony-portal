@@ -1,28 +1,58 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Plus, Clock, User, Building } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { TicketDialog } from "@/components/support/TicketDialog";
+import { TicketList } from "@/components/support/TicketList";
+import { useState } from "react";
 
 interface SupportTicket {
-  id: number;
+  id: string;
   title: string;
   description: string;
-  status: 'new' | 'in_progress' | 'resolved';
+  status: { id: string; name: string; color: string };
+  priority: string;
+  created_by: string;
+  assigned_to?: string;
+  organization_id?: string;
+  creche_id?: string;
   created_at: string;
-  creche_id: number;
+  updated_at: string;
+  resolved_at?: string;
+  organization?: { name: string };
+  creche?: { name: string };
+  assigned_user?: { email: string };
 }
 
 const Support = () => {
   const { toast } = useToast();
+  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   
-  const { data: tickets, isLoading } = useQuery({
+  const { data: tickets, isLoading, refetch } = useQuery({
     queryKey: ["support_tickets"],
     queryFn: async () => {
       try {
         console.log("Fetching support tickets...");
         const { data, error } = await supabase
           .from("support_tickets")
-          .select("*")
+          .select(`
+            *,
+            status:status_id(id, name, color),
+            organization:organization_id(name),
+            creche:creche_id(name),
+            assigned_user:assigned_to(email)
+          `)
           .order("created_at", { ascending: false });
 
         if (error) {
@@ -52,9 +82,11 @@ const Support = () => {
   });
 
   const ticketsByStatus = {
-    new: tickets?.filter(ticket => ticket.status === 'new') || [],
-    in_progress: tickets?.filter(ticket => ticket.status === 'in_progress') || [],
-    resolved: tickets?.filter(ticket => ticket.status === 'resolved') || [],
+    new: tickets?.filter(ticket => ticket.status?.name === 'New') || [],
+    in_progress: tickets?.filter(ticket => ticket.status?.name === 'In Progress') || [],
+    on_hold: tickets?.filter(ticket => ticket.status?.name === 'On Hold') || [],
+    resolved: tickets?.filter(ticket => ticket.status?.name === 'Resolved') || [],
+    closed: tickets?.filter(ticket => ticket.status?.name === 'Closed') || [],
   };
 
   if (isLoading) {
@@ -68,55 +100,91 @@ const Support = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20 px-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-8">Support Tickets</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Support Tickets</h1>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              New Ticket
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>
+                {selectedTicket ? 'Edit Ticket' : 'Create New Ticket'}
+              </DialogTitle>
+            </DialogHeader>
+            <TicketDialog 
+              ticket={selectedTicket}
+              onClose={() => {
+                setIsDialogOpen(false);
+                setSelectedTicket(null);
+              }}
+              onSuccess={() => {
+                refetch();
+                setIsDialogOpen(false);
+                setSelectedTicket(null);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* New Tickets */}
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
         <Card className="p-4">
           <h2 className="font-semibold text-lg mb-4 text-red-600">New</h2>
-          <div className="space-y-4">
-            {ticketsByStatus.new.map((ticket) => (
-              <Card key={ticket.id} className="p-3 hover:shadow-md transition-shadow">
-                <h3 className="font-medium">{ticket.title}</h3>
-                <p className="text-sm text-gray-600 mt-2">{ticket.description}</p>
-                <div className="text-xs text-gray-500 mt-2">
-                  {new Date(ticket.created_at).toLocaleDateString()}
-                </div>
-              </Card>
-            ))}
-          </div>
+          <TicketList 
+            tickets={ticketsByStatus.new} 
+            onTicketClick={(ticket) => {
+              setSelectedTicket(ticket);
+              setIsDialogOpen(true);
+            }}
+          />
         </Card>
 
-        {/* In Progress Tickets */}
         <Card className="p-4">
           <h2 className="font-semibold text-lg mb-4 text-yellow-600">In Progress</h2>
-          <div className="space-y-4">
-            {ticketsByStatus.in_progress.map((ticket) => (
-              <Card key={ticket.id} className="p-3 hover:shadow-md transition-shadow">
-                <h3 className="font-medium">{ticket.title}</h3>
-                <p className="text-sm text-gray-600 mt-2">{ticket.description}</p>
-                <div className="text-xs text-gray-500 mt-2">
-                  {new Date(ticket.created_at).toLocaleDateString()}
-                </div>
-              </Card>
-            ))}
-          </div>
+          <TicketList 
+            tickets={ticketsByStatus.in_progress}
+            onTicketClick={(ticket) => {
+              setSelectedTicket(ticket);
+              setIsDialogOpen(true);
+            }}
+          />
         </Card>
 
-        {/* Resolved Tickets */}
+        <Card className="p-4">
+          <h2 className="font-semibold text-lg mb-4 text-indigo-600">On Hold</h2>
+          <TicketList 
+            tickets={ticketsByStatus.on_hold}
+            onTicketClick={(ticket) => {
+              setSelectedTicket(ticket);
+              setIsDialogOpen(true);
+            }}
+          />
+        </Card>
+
         <Card className="p-4">
           <h2 className="font-semibold text-lg mb-4 text-green-600">Resolved</h2>
-          <div className="space-y-4">
-            {ticketsByStatus.resolved.map((ticket) => (
-              <Card key={ticket.id} className="p-3 hover:shadow-md transition-shadow">
-                <h3 className="font-medium">{ticket.title}</h3>
-                <p className="text-sm text-gray-600 mt-2">{ticket.description}</p>
-                <div className="text-xs text-gray-500 mt-2">
-                  {new Date(ticket.created_at).toLocaleDateString()}
-                </div>
-              </Card>
-            ))}
-          </div>
+          <TicketList 
+            tickets={ticketsByStatus.resolved}
+            onTicketClick={(ticket) => {
+              setSelectedTicket(ticket);
+              setIsDialogOpen(true);
+            }}
+          />
+        </Card>
+
+        <Card className="p-4">
+          <h2 className="font-semibold text-lg mb-4 text-gray-600">Closed</h2>
+          <TicketList 
+            tickets={ticketsByStatus.closed}
+            onTicketClick={(ticket) => {
+              setSelectedTicket(ticket);
+              setIsDialogOpen(true);
+            }}
+          />
         </Card>
       </div>
     </div>
