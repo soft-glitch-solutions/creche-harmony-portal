@@ -1,5 +1,5 @@
 
-import { Home, PieChart, Users, Settings, LifeBuoy, LogOut } from "lucide-react";
+import { Home, PieChart, Users, Settings, LifeBuoy, LogOut, Moon, Sun } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   NavigationMenu,
@@ -11,6 +11,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "@/hooks/use-theme";
 
 const reportItems = [
   { title: "Overview Reports", url: "/reports" },
@@ -21,12 +22,13 @@ const reportItems = [
 const settingItems = [
   { title: "General Settings", url: "/settings" },
   { title: "User Management", url: "/settings/users" },
-  { title: "Notifications", url: "/settings/notifications" },
+  { title: "Roles & Permissions", url: "/settings/roles" },
 ];
 
 export function TopNav() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
 
   const handleLogout = async () => {
     try {
@@ -45,31 +47,37 @@ export function TopNav() {
     }
   };
 
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
+
   return (
-    <nav className="bg-white border-b border-gray-200 fixed w-full z-30 top-0">
+    <nav className="bg-background border-b border-border fixed w-full z-30 top-0">
       <div className="px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <Link to="/" className="text-xl font-bold text-primary-800">CrecheAdmin</Link>
+            <Link to="/" className="text-xl font-bold text-primary">CrecheAdmin</Link>
           </div>
           
           <div className="flex items-center gap-4">
             <NavigationMenu>
               <NavigationMenuList>
                 <NavigationMenuItem>
-                  <Link to="/" className="flex items-center space-x-2 text-gray-600 hover:text-primary-800 px-4 py-2">
+                  <Link to="/" className="flex items-center space-x-2 text-foreground hover:text-primary px-4 py-2">
                     <Home className="h-4 w-4" />
                     <span>Dashboard</span>
                   </Link>
                 </NavigationMenuItem>
 
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="flex items-center space-x-2 text-gray-600">
-                    <PieChart className="h-4 w-4" />
-                    <span>Reports</span>
+                  <NavigationMenuTrigger className="bg-menu hover:bg-menu-hover text-white">
+                    <div className="flex items-center space-x-2">
+                      <PieChart className="h-4 w-4" />
+                      <span>Reports</span>
+                    </div>
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid w-48 gap-1 p-2">
+                    <ul className="grid w-48 gap-1 p-2 bg-popover">
                       {reportItems.map((item) => (
                         <li key={item.title}>
                           <Link
@@ -85,26 +93,28 @@ export function TopNav() {
                 </NavigationMenuItem>
 
                 <NavigationMenuItem>
-                  <Link to="/creches" className="flex items-center space-x-2 text-gray-600 hover:text-primary-800 px-4 py-2">
+                  <Link to="/creches" className="flex items-center space-x-2 text-foreground hover:text-primary px-4 py-2">
                     <Users className="h-4 w-4" />
                     <span>Creches</span>
                   </Link>
                 </NavigationMenuItem>
 
                 <NavigationMenuItem>
-                  <Link to="/support" className="flex items-center space-x-2 text-gray-600 hover:text-primary-800 px-4 py-2">
+                  <Link to="/support" className="flex items-center space-x-2 text-foreground hover:text-primary px-4 py-2">
                     <LifeBuoy className="h-4 w-4" />
                     <span>Support</span>
                   </Link>
                 </NavigationMenuItem>
 
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="flex items-center space-x-2 text-gray-600">
-                    <Settings className="h-4 w-4" />
-                    <span>Settings</span>
+                  <NavigationMenuTrigger className="bg-menu hover:bg-menu-hover text-white">
+                    <div className="flex items-center space-x-2">
+                      <Settings className="h-4 w-4" />
+                      <span>Settings</span>
+                    </div>
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid w-48 gap-1 p-2">
+                    <ul className="grid w-48 gap-1 p-2 bg-popover">
                       {settingItems.map((item) => (
                         <li key={item.title}>
                           <Link
@@ -120,6 +130,15 @@ export function TopNav() {
                 </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="mr-2"
+            >
+              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
 
             <Button
               variant="ghost"

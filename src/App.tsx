@@ -6,12 +6,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ThemeProvider } from "@/hooks/use-theme";
 import { TopNav } from "./components/layout/TopNav";
 import Index from "./pages/Index";
 import Reports from "./pages/Reports";
 import Creches from "./pages/Creches";
 import CreheDetails from "./pages/CreheDetails";
 import Settings from "./pages/Settings";
+import RolesPermissions from "./pages/RolesPermissions";
 import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
@@ -48,82 +50,95 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/auth" element={<Auth />} />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <>
-                  <TopNav />
-                  <Index />
-                </>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/reports"
-            element={
-              <ProtectedRoute>
-                <>
-                  <TopNav />
-                  <Reports />
-                </>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/creches"
-            element={
-              <ProtectedRoute>
-                <>
-                  <TopNav />
-                  <Creches />
-                </>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/creches/:id"
-            element={
-              <ProtectedRoute>
-                <>
-                  <TopNav />
-                  <CreheDetails />
-                </>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute>
-                <>
-                  <TopNav />
-                  <Settings />
-                </>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/support"
-            element={
-              <ProtectedRoute>
-                <>
-                  <TopNav />
-                  <Support />
-                </>
-              </ProtectedRoute>
-            }
-          />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <ThemeProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/auth" element={<Auth />} />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <>
+                    <TopNav />
+                    <Index />
+                  </>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/reports"
+              element={
+                <ProtectedRoute>
+                  <>
+                    <TopNav />
+                    <Reports />
+                  </>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/creches"
+              element={
+                <ProtectedRoute>
+                  <>
+                    <TopNav />
+                    <Creches />
+                  </>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/creches/:id"
+              element={
+                <ProtectedRoute>
+                  <>
+                    <TopNav />
+                    <CreheDetails />
+                  </>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <>
+                    <TopNav />
+                    <Settings />
+                  </>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings/roles"
+              element={
+                <ProtectedRoute>
+                  <>
+                    <TopNav />
+                    <RolesPermissions />
+                  </>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/support"
+              element={
+                <ProtectedRoute>
+                  <>
+                    <TopNav />
+                    <Support />
+                  </>
+                </ProtectedRoute>
+              }
+            />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
