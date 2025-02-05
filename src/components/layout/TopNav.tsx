@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
 import { useState, useEffect } from "react";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogFooter } from "@/components/ui/dialog"; // Dialog component import
 
 const settingItems = [
   { title: "General Settings", url: "/settings" },
@@ -41,6 +42,10 @@ export function TopNav() {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [openRoleDialog, setOpenRoleDialog] = useState(false); // Manage Dialog State
+  const [selectedRole, setSelectedRole] = useState<string>('');
+
+  const availableRoles = ['Admin', 'Manager', 'Staff', 'Viewer']; // Example roles
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -48,7 +53,7 @@ export function TopNav() {
       if (user) {
         const { data: profile } = await supabase
           .from('users')
-          .select('*, roles(role_name)')
+          .select('*, roles(role_name), profile_picture_url')  // Include profile_picture_url
           .eq('id', user.id)
           .single();
         setUserProfile(profile);
@@ -76,6 +81,38 @@ export function TopNav() {
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
+
+  const handleRoleChange = async () => {
+    // Logic to update user role on the backend
+    if (userProfile) {
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .update({ role: selectedRole })
+          .eq('id', userProfile.id);
+
+        if (error) {
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: error.message,
+          });
+        } else {
+          toast({
+            title: 'Success',
+            description: `Role changed to ${selectedRole}`,
+          });
+          setOpenRoleDialog(false);
+        }
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Failed to change role',
+        });
+      }
+    }
   };
 
   return (
@@ -189,17 +226,13 @@ export function TopNav() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2">
+                  {/* Profile Image */}
                   <img
-                    src="/images/icons/user.png"
+                    src={userProfile?.profile_picture_url || '/assets/icon/user-placeholder.png'} // Fallback to placeholder
                     alt="User Icon"
-                    className="h-5 w-5"
+                    className="h-5 w-5 rounded-full"
                   />
                   <span>{userProfile?.first_name || 'User'}</span>
-                  <img
-                    src="/images/icons/chevron-down.png"
-                    alt="Expand Icon"
-                    className="h-4 w-4"
-                  />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
@@ -207,17 +240,41 @@ export function TopNav() {
                 <DropdownMenuItem disabled>
                   Role: {userProfile?.roles?.role_name || 'Loading...'}
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setOpenRoleDialog(true)}>
+                  <Button variant="outline" size="sm">Switch Role</Button>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>Profile Settings</DropdownMenuItem>
                 <DropdownMenuItem onClick={handleLogout}>
                   <img src="/images/icons/logout.png" alt="Logout Icon" className="h-4 w-4 mr-2" />
-                  <span>Logout</span>
+                  Logout
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>
       </div>
+
+      {/* Role Dialog */}
+      <Dialog open={openRoleDialog} onOpenChange={setOpenRoleDialog}>
+        <DialogContent>
+          <DialogHeader>Change User Role</DialogHeader>
+          <select
+            value={selectedRole}
+            onChange={(e) => setSelectedRole(e.target.value)}
+            className="w-full px-3 py-2"
+          >
+            <option value="">Select a role</option>
+            {availableRoles.map((role) => (
+              <option key={role} value={role}>{role}</option>
+            ))}
+          </select>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpenRoleDialog(false)}>Cancel</Button>
+            <Button onClick={handleRoleChange}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </nav>
   );
 }

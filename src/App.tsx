@@ -17,6 +17,7 @@ import RolesPermissions from "./pages/RolesPermissions";
 import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
+import System from "./pages/System";
 
 const queryClient = new QueryClient();
 
@@ -130,6 +131,17 @@ const App = () => (
                   <>
                     <TopNav />
                     <Support />
+                  </>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings/system"
+              element={
+                <ProtectedRoute>
+                  <>
+                    <TopNav />
+                    <System />
                   </>
                 </ProtectedRoute>
               }
