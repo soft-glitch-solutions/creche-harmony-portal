@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { AlertCircle } from "lucide-react";
 
-import logo from "../../public/assets/logo.png";
+import logo from "/public/assets/logo.png";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
