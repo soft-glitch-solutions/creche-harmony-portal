@@ -1,5 +1,3 @@
-
-import { Home, PieChart, Users, Settings, LifeBuoy, LogOut, Moon, Sun, ChevronDown, UserCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   NavigationMenu,
@@ -29,6 +27,12 @@ const settingItems = [
   { title: "System Configuration", url: "/settings/system" },
   { title: "Notifications", url: "/settings/notifications" },
   { title: "Billing & Subscriptions", url: "/settings/billing" },
+];
+
+const menuItems = [
+  { label: "Dashboard", path: "/", icon: "/assets/icon/home.png", bgColor: "#F684A3" },
+  { label: "Creches", path: "/creches", icon: "/assets/icon/block.png", bgColor: "#84A7F6" },
+  { label: "Support", path: "/support", icon: "/assets/icon/help.png", bgColor: "#9CDBC8" },
 ];
 
 export function TopNav() {
@@ -84,31 +88,35 @@ export function TopNav() {
           <div className="flex items-center gap-4">
             <NavigationMenu>
               <NavigationMenuList>
-                <NavigationMenuItem>
-                  <Link to="/" className="flex items-center space-x-2 text-foreground hover:text-primary px-4 py-2">
-                    <Home className="h-4 w-4" />
-                    <span>Dashboard</span>
-                  </Link>
-                </NavigationMenuItem>
-
-                <NavigationMenuItem>
-                  <Link to="/creches" className="flex items-center space-x-2 text-foreground hover:text-primary px-4 py-2">
-                    <Users className="h-4 w-4" />
-                    <span>Creches</span>
-                  </Link>
-                </NavigationMenuItem>
-
-                <NavigationMenuItem>
-                  <Link to="/support" className="flex items-center space-x-2 text-foreground hover:text-primary px-4 py-2">
-                    <LifeBuoy className="h-4 w-4" />
-                    <span>Support</span>
-                  </Link>
-                </NavigationMenuItem>
+                {menuItems.map((item) => (
+                  <NavigationMenuItem key={item.label}>
+                    <Link to={item.path} className="flex items-center space-x-2 text-foreground hover:text-primary px-4 py-2">
+                      <div
+                        className="h-8 w-8 flex items-center justify-center rounded-md"
+                        style={{ backgroundColor: item.bgColor }}
+                      >
+                        <div
+                          className="h-6 w-6 bg-cover bg-center"
+                          style={{ backgroundImage: `url(${item.icon})` }}
+                        />
+                      </div>
+                      <span>{item.label}</span>
+                    </Link>
+                  </NavigationMenuItem>
+                ))}
 
                 <NavigationMenuItem>
                   <NavigationMenuTrigger className="bg-transparent hover:bg-accent text-foreground">
                     <div className="flex items-center space-x-2">
-                      <Settings className="h-4 w-4" />
+                      <div
+                        className="h-8 w-8 flex items-center justify-center rounded-md"
+                        style={{ backgroundColor: "#F7CD85" }}
+                      >
+                        <div
+                          className="h-6 w-6 bg-cover bg-center"
+                          style={{ backgroundImage: `url(/assets/icon/settings.png)` }}
+                        />
+                      </div>
                       <span>Settings</span>
                     </div>
                   </NavigationMenuTrigger>
@@ -136,15 +144,27 @@ export function TopNav() {
               onClick={toggleTheme}
               className="mr-2"
             >
-              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              <img
+                src={theme === 'dark' ? "/assets/icon/sun.png" : "/assets/icon/moon.png"}
+                alt="Theme Icon"
+                className="h-4 w-4"
+              />
             </Button>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2">
-                  <UserCircle className="h-5 w-5" />
+                  <img
+                    src="/images/icons/user.png"
+                    alt="User Icon"
+                    className="h-5 w-5"
+                  />
                   <span>{userProfile?.first_name || 'User'}</span>
-                  <ChevronDown className="h-4 w-4" />
+                  <img
+                    src="/images/icons/chevron-down.png"
+                    alt="Expand Icon"
+                    className="h-4 w-4"
+                  />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
@@ -155,7 +175,7 @@ export function TopNav() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>Profile Settings</DropdownMenuItem>
                 <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="h-4 w-4 mr-2" />
+                  <img src="/images/icons/logout.png" alt="Logout Icon" className="h-4 w-4 mr-2" />
                   <span>Logout</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
