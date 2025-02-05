@@ -1,3 +1,4 @@
+
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { Users, School, Clock, AlertCircle, TrendingUp, DollarSign } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -27,6 +28,22 @@ const Index = () => {
     queryFn: async () => {
       const { data } = await supabase.from("applications").select("*");
       return data || [];
+    }
+  });
+
+  const { data: userData } = useQuery({
+    queryKey: ["currentUser"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      
+      const { data } = await supabase
+        .from('users')
+        .select('first_name, last_name, roles:roles(role_name)')
+        .eq('id', user.id)
+        .single();
+      
+      return data;
     }
   });
 
@@ -63,8 +80,10 @@ const Index = () => {
       <main className="p-8 pt-20">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-gray-600">Welcome back, Admin</p>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Welcome back, {userData?.first_name || 'User'}
+            </h1>
+            <p className="text-gray-600">{userData?.roles?.role_name || 'Loading...'}</p>
           </div>
         </div>
 
