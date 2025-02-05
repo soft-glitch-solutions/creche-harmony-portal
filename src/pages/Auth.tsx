@@ -8,6 +8,8 @@ import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { AlertCircle } from "lucide-react";
 
+import logo from "../../public/assets/logo.png";
+
 export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -93,6 +95,7 @@ export default function Auth() {
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
       <Card className="w-full max-w-md p-6 space-y-6">
         <div className="text-center space-y-2">
+          <img src={logo} alt="Logo" className="mx-auto h-16 w-auto" />
           <h1 className="text-2xl font-bold">Welcome Back</h1>
           <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 p-3 rounded-md">
             <AlertCircle className="h-4 w-4" />
