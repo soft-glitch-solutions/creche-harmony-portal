@@ -1,12 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
 import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -27,6 +20,14 @@ const settingItems = [
   { title: "System Configuration", url: "/settings/system" },
   { title: "Notifications", url: "/settings/notifications" },
   { title: "Billing & Subscriptions", url: "/settings/billing" },
+];
+
+const reportItems = [
+  { title: "Creche Performance Report", url: "/reports/creche-performance" },
+  { title: "Daycare Center Utilization", url: "/reports/daycare-utilization" },
+  { title: "Enrollment Statistics", url: "/reports/enrollment-statistics" },
+  { title: "Staffing & Operations", url: "/reports/staffing-operations" },
+  { title: "Financial Overview", url: "/reports/financial-overview" },
 ];
 
 const menuItems = [
@@ -84,60 +85,93 @@ export function TopNav() {
           <div className="flex items-center">
             <Link to="/" className="text-xl font-bold text-primary">CrecheAdmin</Link>
           </div>
-          
+
           <div className="flex items-center gap-4">
-            <NavigationMenu>
-              <NavigationMenuList>
-                {menuItems.map((item) => (
-                  <NavigationMenuItem key={item.label}>
-                    <Link to={item.path} className="flex items-center space-x-2 text-foreground hover:text-primary px-4 py-2">
+            {/* Main Navigation Menu Items */}
+            <div className="flex items-center space-x-4">
+              {menuItems.map((item) => (
+                <Link
+                  key={item.label}
+                  to={item.path}
+                  className="flex items-center space-x-2 text-foreground hover:text-primary px-4 py-2"
+                >
+                  <div
+                    className="h-8 w-8 flex items-center justify-center rounded-md"
+                    style={{ backgroundColor: item.bgColor }}
+                  >
+                    <div
+                      className="h-6 w-6 bg-cover bg-center"
+                      style={{ backgroundImage: `url(${item.icon})` }}
+                    />
+                  </div>
+                  <span>{item.label}</span>
+                </Link>
+              ))}
+              
+              {/* Reports Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center gap-2">
+                    <div
+                      className="h-8 w-8 flex items-center justify-center rounded-md"
+                      style={{ backgroundColor: "#F6A85C" }}
+                    >
                       <div
-                        className="h-8 w-8 flex items-center justify-center rounded-md"
-                        style={{ backgroundColor: item.bgColor }}
-                      >
-                        <div
-                          className="h-6 w-6 bg-cover bg-center"
-                          style={{ backgroundImage: `url(${item.icon})` }}
-                        />
-                      </div>
-                      <span>{item.label}</span>
-                    </Link>
-                  </NavigationMenuItem>
-                ))}
-
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent hover:bg-accent text-foreground">
-                    <div className="flex items-center space-x-2">
-                      <div
-                        className="h-8 w-8 flex items-center justify-center rounded-md"
-                        style={{ backgroundColor: "#F7CD85" }}
-                      >
-                        <div
-                          className="h-6 w-6 bg-cover bg-center"
-                          style={{ backgroundImage: `url(/assets/icon/settings.png)` }}
-                        />
-                      </div>
-                      <span>Settings</span>
+                        className="h-6 w-6 bg-cover bg-center"
+                        style={{ backgroundImage: `url(/assets/icon/report.png)` }}
+                      />
                     </div>
-                  </NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <ul className="grid w-48 gap-1 p-2 bg-popover">
-                      {settingItems.map((item) => (
-                        <li key={item.title}>
-                          <Link
-                            to={item.url}
-                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                          >
-                            <div className="text-sm font-medium leading-none">{item.title}</div>
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-              </NavigationMenuList>
-            </NavigationMenu>
+                    <span>Reports</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-48 mt-2  shadow-lg rounded-md">
+                  <DropdownMenuLabel>Reports</DropdownMenuLabel>
+                  {reportItems.map((item) => (
+                    <DropdownMenuItem key={item.title}>
+                      <Link
+                        to={item.url}
+                        className="block p-2 text-sm text-foreground hover:bg-accent rounded-md"
+                      >
+                        {item.title}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
 
+              {/* Settings Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center gap-2">
+                    <div
+                      className="h-8 w-8 flex items-center justify-center rounded-md"
+                      style={{ backgroundColor: "#F7CD85" }}
+                    >
+                      <div
+                        className="h-6 w-6 bg-cover bg-center"
+                        style={{ backgroundImage: `url(/assets/icon/settings.png)` }}
+                      />
+                    </div>
+                    <span>Settings</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-48 mt-2 shadow-lg rounded-md">
+                  <DropdownMenuLabel>Settings</DropdownMenuLabel>
+                  {settingItems.map((item) => (
+                    <DropdownMenuItem key={item.title}>
+                      <Link
+                        to={item.url}
+                        className="block p-2 text-sm text-foreground hover:bg-accent rounded-md"
+                      >
+                        {item.title}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            {/* Theme Toggle Button */}
             <Button
               variant="ghost"
               size="icon"
@@ -151,6 +185,7 @@ export function TopNav() {
               />
             </Button>
 
+            {/* User Profile Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2">

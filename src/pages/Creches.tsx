@@ -61,7 +61,6 @@ const Creches = () => {
   return (
     <div className="p-8 pt-20">
       <div className="flex flex-col space-y-4 mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Creches</h1>
         
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
           <Input
