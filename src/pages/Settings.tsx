@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import UserManagement from "./UserManagement";
 
 const Settings = () => {
   return (
@@ -19,7 +20,7 @@ const Settings = () => {
               <CardTitle>User Management</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600">User management functionality coming soon...</p>
+              <UserManagement />
             </CardContent>
           </Card>
         </TabsContent>
