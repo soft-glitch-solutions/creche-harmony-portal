@@ -421,7 +421,12 @@ export type Database = {
       }
       creches: {
         Row: {
+          account_holder: string | null
+          account_number: string | null
+          account_type: string | null
           address: string | null
+          bank_name: string | null
+          branch_code: string | null
           capacity: number | null
           created_at: string | null
           description: string | null
@@ -438,6 +443,7 @@ export type Database = {
           monthly_price: number | null
           name: string
           operating_hours: string | null
+          payment_day: number | null
           phone_number: string | null
           plan: string | null
           price: number | null
@@ -451,7 +457,12 @@ export type Database = {
           whatsapp_number: string | null
         }
         Insert: {
+          account_holder?: string | null
+          account_number?: string | null
+          account_type?: string | null
           address?: string | null
+          bank_name?: string | null
+          branch_code?: string | null
           capacity?: number | null
           created_at?: string | null
           description?: string | null
@@ -468,6 +479,7 @@ export type Database = {
           monthly_price?: number | null
           name: string
           operating_hours?: string | null
+          payment_day?: number | null
           phone_number?: string | null
           plan?: string | null
           price?: number | null
@@ -481,7 +493,12 @@ export type Database = {
           whatsapp_number?: string | null
         }
         Update: {
+          account_holder?: string | null
+          account_number?: string | null
+          account_type?: string | null
           address?: string | null
+          bank_name?: string | null
+          branch_code?: string | null
           capacity?: number | null
           created_at?: string | null
           description?: string | null
@@ -498,6 +515,7 @@ export type Database = {
           monthly_price?: number | null
           name?: string
           operating_hours?: string | null
+          payment_day?: number | null
           phone_number?: string | null
           plan?: string | null
           price?: number | null
@@ -672,6 +690,7 @@ export type Database = {
       }
       invoices: {
         Row: {
+          application_id: string | null
           created_at: string | null
           creche_id: string | null
           id: string
@@ -687,6 +706,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          application_id?: string | null
           created_at?: string | null
           creche_id?: string | null
           id?: string
@@ -702,6 +722,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          application_id?: string | null
           created_at?: string | null
           creche_id?: string | null
           id?: string
@@ -717,6 +738,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "invoices_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "invoices_creche_id_fkey"
             columns: ["creche_id"]
@@ -744,6 +772,7 @@ export type Database = {
         Row: {
           color: string
           created_at: string | null
+          creche_id: string | null
           id: string
           name: string
           updated_at: string | null
@@ -751,6 +780,7 @@ export type Database = {
         Insert: {
           color?: string
           created_at?: string | null
+          creche_id?: string | null
           id?: string
           name: string
           updated_at?: string | null
@@ -758,11 +788,20 @@ export type Database = {
         Update: {
           color?: string
           created_at?: string | null
+          creche_id?: string | null
           id?: string
           name?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "lesson_types_creche_id_fkey"
+            columns: ["creche_id"]
+            isOneToOne: false
+            referencedRelation: "creches"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lessons: {
         Row: {
@@ -1241,6 +1280,39 @@ export type Database = {
           },
         ]
       }
+      support_requests: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: string
+          message: string
+          status: string | null
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          id?: string
+          message: string
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: string
+          message?: string
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       support_tickets: {
         Row: {
           assigned_to: string | null
@@ -1541,7 +1613,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_monthly_invoices: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       help_category: "documentation" | "faq" | "tutorial"

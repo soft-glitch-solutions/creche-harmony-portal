@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { 
@@ -9,7 +8,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Plus, Clock, User, Building } from "lucide-react";
+import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { TicketDialog } from "@/components/support/TicketDialog";
@@ -39,12 +38,28 @@ const Support = () => {
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
-  const { data: tickets, isLoading, refetch } = useQuery({
+  const { data: tickets = [], isLoading, refetch } = useQuery({
     queryKey: ["support_tickets"],
     queryFn: async () => {
       try {
         console.log("Fetching support tickets...");
-        const { data, error } = await supabase
+        
+        // First, get support requests and convert them to tickets
+        const { data: requests, error: requestsError } = await supabase
+          .from("support_requests")
+          .select(`
+            *,
+            creche:creche_id(id, name)
+          `)
+          .eq('status', 'open');
+
+        if (requestsError) {
+          console.error("Error fetching support requests:", requestsError);
+          throw requestsError;
+        }
+
+        // Then get existing tickets
+        const { data: existingTickets, error: ticketsError } = await supabase
           .from("support_tickets")
           .select(`
             *,
@@ -55,18 +70,31 @@ const Support = () => {
           `)
           .order("created_at", { ascending: false });
 
-        if (error) {
-          console.error("Supabase error:", error);
-          toast({
-            title: "Error",
-            description: "Failed to load support tickets. Please try again later.",
-            variant: "destructive",
-          });
-          return [];
+        if (ticketsError) {
+          console.error("Error fetching tickets:", ticketsError);
+          throw ticketsError;
         }
 
-        console.log("Fetched support tickets successfully:", data);
-        return data || [];
+        // Convert support requests to ticket format
+        const requestTickets = requests?.map(request => ({
+          id: request.id,
+          title: request.title,
+          description: request.message,
+          status: { id: '1', name: 'New', color: '#ff0000' }, // Assuming this is your "New" status ID
+          priority: 'medium',
+          created_by: request.user_id,
+          creche_id: request.creche_id,
+          created_at: request.created_at,
+          updated_at: request.updated_at,
+          creche: request.creche,
+          source: 'support_request'
+        })) || [];
+
+        // Combine and return all tickets
+        const allTickets = [...(existingTickets || []), ...requestTickets];
+        console.log("All tickets:", allTickets);
+        return allTickets;
+
       } catch (error) {
         console.error("Error in query function:", error);
         toast({
@@ -137,7 +165,7 @@ const Support = () => {
           <TicketList 
             tickets={ticketsByStatus.new} 
             onTicketClick={(ticket) => {
-              setSelectedTicket(ticket);
+              setSelectedTicket(ticket as SupportTicket);
               setIsDialogOpen(true);
             }}
           />
@@ -148,7 +176,7 @@ const Support = () => {
           <TicketList 
             tickets={ticketsByStatus.in_progress}
             onTicketClick={(ticket) => {
-              setSelectedTicket(ticket);
+              setSelectedTicket(ticket as SupportTicket);
               setIsDialogOpen(true);
             }}
           />
@@ -159,7 +187,7 @@ const Support = () => {
           <TicketList 
             tickets={ticketsByStatus.on_hold}
             onTicketClick={(ticket) => {
-              setSelectedTicket(ticket);
+              setSelectedTicket(ticket as SupportTicket);
               setIsDialogOpen(true);
             }}
           />
@@ -170,7 +198,7 @@ const Support = () => {
           <TicketList 
             tickets={ticketsByStatus.resolved}
             onTicketClick={(ticket) => {
-              setSelectedTicket(ticket);
+              setSelectedTicket(ticket as SupportTicket);
               setIsDialogOpen(true);
             }}
           />
@@ -181,7 +209,7 @@ const Support = () => {
           <TicketList 
             tickets={ticketsByStatus.closed}
             onTicketClick={(ticket) => {
-              setSelectedTicket(ticket);
+              setSelectedTicket(ticket as SupportTicket);
               setIsDialogOpen(true);
             }}
           />

@@ -1,6 +1,6 @@
-
 import { Card } from "@/components/ui/card";
 import { Clock, User, Building } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface Ticket {
   id: string;
@@ -11,6 +11,7 @@ interface Ticket {
   organization?: { name: string };
   creche?: { name: string };
   assigned_user?: { email: string };
+  source?: string;
 }
 
 interface TicketListProps {
@@ -27,7 +28,13 @@ export const TicketList = ({ tickets, onTicketClick }: TicketListProps) => {
           className="p-3 hover:shadow-md transition-shadow cursor-pointer"
           onClick={() => onTicketClick(ticket)}
         >
-          <h3 className="font-medium">{ticket.title}</h3>
+          <div className="flex justify-between items-start">
+            <h3 className="font-medium">{ticket.title}</h3>
+            {ticket.source === 'support_request' && (
+              <Badge variant="secondary" className="ml-2">Support Request</Badge>
+            )}
+          </div>
+          
           <p className="text-sm text-gray-600 mt-2 line-clamp-2">{ticket.description}</p>
           
           <div className="mt-3 space-y-1 text-xs text-gray-500">
