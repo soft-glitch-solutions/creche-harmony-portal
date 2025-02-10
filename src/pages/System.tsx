@@ -40,49 +40,11 @@ const System = () => {
       
       <Tabs defaultValue="logs" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="user-management">User Management</TabsTrigger>
-          <TabsTrigger value="roles-permissions">Roles & Permissions</TabsTrigger>
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="logs">Logs</TabsTrigger>
           <TabsTrigger value="system-status">System Status</TabsTrigger>
         </TabsList>
 
-        {/* User Management Tab */}
-        <TabsContent value="user-management">
-          <Card>
-            <CardHeader>
-              <CardTitle>User Management</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">User management functionality coming soon...</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Roles & Permissions Tab */}
-        <TabsContent value="roles-permissions">
-          <Card>
-            <CardHeader>
-              <CardTitle>Roles & Permissions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4">
-                <div className="border rounded-lg p-4">
-                  <h3 className="font-semibold mb-2">Admin</h3>
-                  <p className="text-sm text-gray-600">Full system access including user management and configuration</p>
-                </div>
-                <div className="border rounded-lg p-4">
-                  <h3 className="font-semibold mb-2">Manager</h3>
-                  <p className="text-sm text-gray-600">Can manage creches and view reports</p>
-                </div>
-                <div className="border rounded-lg p-4">
-                  <h3 className="font-semibold mb-2">User</h3>
-                  <p className="text-sm text-gray-600">Basic access to view creches and submit reports</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         {/* General Settings Tab */}
         <TabsContent value="general">
