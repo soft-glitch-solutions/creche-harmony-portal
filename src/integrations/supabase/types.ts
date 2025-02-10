@@ -1620,6 +1620,88 @@ export type Database = {
           },
         ]
       }
+      webhook_configurations: {
+        Row: {
+          created_at: string | null
+          creche_id: string | null
+          id: string
+          last_used_at: string | null
+          name: string
+          status: string | null
+          updated_at: string | null
+          webhook_key: string
+        }
+        Insert: {
+          created_at?: string | null
+          creche_id?: string | null
+          id?: string
+          last_used_at?: string | null
+          name: string
+          status?: string | null
+          updated_at?: string | null
+          webhook_key?: string
+        }
+        Update: {
+          created_at?: string | null
+          creche_id?: string | null
+          id?: string
+          last_used_at?: string | null
+          name?: string
+          status?: string | null
+          updated_at?: string | null
+          webhook_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_configurations_creche_id_fkey"
+            columns: ["creche_id"]
+            isOneToOne: false
+            referencedRelation: "creches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhook_logs: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          id: string
+          ip_address: string | null
+          payload: Json | null
+          status: string | null
+          user_agent: string | null
+          webhook_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          ip_address?: string | null
+          payload?: Json | null
+          status?: string | null
+          user_agent?: string | null
+          webhook_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          ip_address?: string | null
+          payload?: Json | null
+          status?: string | null
+          user_agent?: string | null
+          webhook_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_logs_webhook_id_fkey"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "webhook_configurations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

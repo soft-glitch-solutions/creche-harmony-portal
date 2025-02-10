@@ -1,6 +1,8 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UserManagement from "./UserManagement";
+import WebhookIntegration from "@/components/settings/WebhookIntegration";
 
 const Settings = () => {
   return (
@@ -11,6 +13,7 @@ const Settings = () => {
         <TabsList>
           <TabsTrigger value="user-management">User Management</TabsTrigger>
           <TabsTrigger value="roles-permissions">Roles & Permissions</TabsTrigger>
+          <TabsTrigger value="integrations">Integrations</TabsTrigger>
           <TabsTrigger value="general">General</TabsTrigger>
         </TabsList>
 
@@ -45,6 +48,17 @@ const Settings = () => {
                   <p className="text-sm text-gray-600">Basic access to view creches and submit reports</p>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="integrations">
+          <Card>
+            <CardHeader>
+              <CardTitle>Webhook Integration</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <WebhookIntegration />
             </CardContent>
           </Card>
         </TabsContent>
