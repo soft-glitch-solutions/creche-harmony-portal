@@ -432,6 +432,7 @@ export type Database = {
           description: string | null
           email: string | null
           facebook_url: string | null
+          facilities: Json | null
           features: Json | null
           header_image: string | null
           id: string
@@ -448,6 +449,7 @@ export type Database = {
           plan: string | null
           price: number | null
           registered: boolean | null
+          services: Json | null
           telegram_number: string | null
           twitter_url: string | null
           updated_at: string | null
@@ -468,6 +470,7 @@ export type Database = {
           description?: string | null
           email?: string | null
           facebook_url?: string | null
+          facilities?: Json | null
           features?: Json | null
           header_image?: string | null
           id?: string
@@ -484,6 +487,7 @@ export type Database = {
           plan?: string | null
           price?: number | null
           registered?: boolean | null
+          services?: Json | null
           telegram_number?: string | null
           twitter_url?: string | null
           updated_at?: string | null
@@ -504,6 +508,7 @@ export type Database = {
           description?: string | null
           email?: string | null
           facebook_url?: string | null
+          facilities?: Json | null
           features?: Json | null
           header_image?: string | null
           id?: string
@@ -520,6 +525,7 @@ export type Database = {
           plan?: string | null
           price?: number | null
           registered?: boolean | null
+          services?: Json | null
           telegram_number?: string | null
           twitter_url?: string | null
           updated_at?: string | null
@@ -1216,6 +1222,7 @@ export type Database = {
           parent_name: string | null
           parent_phone_number: string | null
           parent_whatsapp: string | null
+          profile_picture: string | null
           user_id: string | null
         }
         Insert: {
@@ -1235,6 +1242,7 @@ export type Database = {
           parent_name?: string | null
           parent_phone_number?: string | null
           parent_whatsapp?: string | null
+          profile_picture?: string | null
           user_id?: string | null
         }
         Update: {
@@ -1254,6 +1262,7 @@ export type Database = {
           parent_name?: string | null
           parent_phone_number?: string | null
           parent_whatsapp?: string | null
+          profile_picture?: string | null
           user_id?: string | null
         }
         Relationships: [
@@ -1550,6 +1559,7 @@ export type Database = {
           last_name: string | null
           latitude: string | null
           longitude: string | null
+          payment_score: number | null
           phone_number: string | null
           price: string | null
           profile_picture_url: string | null
@@ -1570,6 +1580,7 @@ export type Database = {
           last_name?: string | null
           latitude?: string | null
           longitude?: string | null
+          payment_score?: number | null
           phone_number?: string | null
           price?: string | null
           profile_picture_url?: string | null
@@ -1590,6 +1601,7 @@ export type Database = {
           last_name?: string | null
           latitude?: string | null
           longitude?: string | null
+          payment_score?: number | null
           phone_number?: string | null
           price?: string | null
           profile_picture_url?: string | null
