@@ -1627,6 +1627,7 @@ export type Database = {
           id: string
           last_used_at: string | null
           name: string
+          source: string | null
           status: string | null
           updated_at: string | null
           webhook_key: string
@@ -1637,6 +1638,7 @@ export type Database = {
           id?: string
           last_used_at?: string | null
           name: string
+          source?: string | null
           status?: string | null
           updated_at?: string | null
           webhook_key?: string
@@ -1647,6 +1649,7 @@ export type Database = {
           id?: string
           last_used_at?: string | null
           name?: string
+          source?: string | null
           status?: string | null
           updated_at?: string | null
           webhook_key?: string

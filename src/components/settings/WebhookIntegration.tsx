@@ -5,20 +5,35 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 
 const WebhookIntegration = () => {
   const [newWebhookName, setNewWebhookName] = useState('');
+  const [selectedCreche, setSelectedCreche] = useState<string>('');
+  const [source, setSource] = useState('website');
   const { toast } = useToast();
+
+  const { data: creches } = useQuery({
+    queryKey: ['creches'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('creches')
+        .select('id, name');
+      
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const { data: webhooks, refetch: refetchWebhooks } = useQuery({
     queryKey: ['webhooks'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('webhook_configurations')
-        .select('*')
+        .select('*, creches(name)')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -50,15 +65,10 @@ const WebhookIntegration = () => {
       return;
     }
 
-    const { data: userCreches } = await supabase
-      .from('user_creche')
-      .select('creche_id')
-      .single();
-
-    if (!userCreches?.creche_id) {
+    if (!selectedCreche) {
       toast({
         title: "Error",
-        description: "No creche associated with your account",
+        description: "Please select a creche",
         variant: "destructive",
       });
       return;
@@ -68,7 +78,8 @@ const WebhookIntegration = () => {
       .from('webhook_configurations')
       .insert({
         name: newWebhookName,
-        creche_id: userCreches.creche_id,
+        creche_id: selectedCreche,
+        source: source,
       });
 
     if (error) {
@@ -85,6 +96,8 @@ const WebhookIntegration = () => {
       description: "Webhook created successfully",
     });
     setNewWebhookName('');
+    setSelectedCreche('');
+    setSource('website');
     refetchWebhooks();
   };
 
@@ -102,6 +115,33 @@ const WebhookIntegration = () => {
               onChange={(e) => setNewWebhookName(e.target.value)}
             />
           </div>
+          
+          <div className="grid gap-2">
+            <Label htmlFor="creche">Select Creche</Label>
+            <Select value={selectedCreche} onValueChange={setSelectedCreche}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a creche" />
+              </SelectTrigger>
+              <SelectContent>
+                {creches?.map((creche) => (
+                  <SelectItem key={creche.id} value={creche.id}>
+                    {creche.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="source">Source</Label>
+            <Input
+              id="source"
+              placeholder="Enter webhook source"
+              value={source}
+              onChange={(e) => setSource(e.target.value)}
+            />
+          </div>
+
           <Button onClick={createWebhook}>Create Webhook</Button>
         </div>
       </div>
@@ -111,9 +151,11 @@ const WebhookIntegration = () => {
         <div className="grid gap-4">
           {webhooks?.map((webhook) => (
             <Card key={webhook.id} className="p-4">
-              <div className="flex justify-between items-center">
-                <div>
+              <div className="flex justify-between items-start">
+                <div className="space-y-1">
                   <h4 className="font-medium">{webhook.name}</h4>
+                  <p className="text-sm text-gray-500">Creche: {webhook.creches?.name}</p>
+                  <p className="text-sm text-gray-500">Source: {webhook.source}</p>
                   <p className="text-sm text-gray-500">Key: {webhook.webhook_key}</p>
                   <p className="text-sm text-gray-500">
                     Created: {new Date(webhook.created_at).toLocaleDateString()}
