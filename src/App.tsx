@@ -18,6 +18,7 @@ import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import System from "./pages/System";
+import CrehePerformance from "./pages/reports/CrehePerformance";
 
 const queryClient = new QueryClient();
 
@@ -76,6 +77,17 @@ const App = () => (
                   <>
                     <TopNav />
                     <Reports />
+                  </>
+                </ProtectedRoute>
+              }
+            />
+                          <Route
+              path="/reports/creche-performance"
+              element={
+                <ProtectedRoute>
+                  <>
+                    <TopNav />
+                    <CrehePerformance />
                   </>
                 </ProtectedRoute>
               }
