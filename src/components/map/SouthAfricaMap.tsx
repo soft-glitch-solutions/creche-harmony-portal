@@ -34,7 +34,6 @@ export const SouthAfricaMap = () => {
     },
   });
 
-  // Early return for server-side rendering or when component is not mounted
   if (!isMounted || typeof window === 'undefined') {
     return <div className="h-[400px] w-full bg-muted" />;
   }
@@ -42,6 +41,7 @@ export const SouthAfricaMap = () => {
   return (
     <div className="h-[400px] w-full relative">
       <MapContainer
+        key="map"
         center={[-30.5595, 22.9375]}
         zoom={5}
         className="h-full w-full"
