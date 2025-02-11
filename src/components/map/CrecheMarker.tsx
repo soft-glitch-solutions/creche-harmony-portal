@@ -12,7 +12,14 @@ type CrecheMarkerProps = {
   suburb: string;
 };
 
-export const CrecheMarker = ({ id, name, latitude, longitude, province, suburb }: CrecheMarkerProps) => {
+export const CrecheMarker = ({
+  id,
+  name,
+  latitude,
+  longitude,
+  province,
+  suburb,
+}: CrecheMarkerProps) => {
   const navigate = useNavigate();
 
   if (!latitude || !longitude || typeof latitude !== 'number' || typeof longitude !== 'number') {

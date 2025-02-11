@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { CrecheMarker } from './CrecheMarker';
 
 export const SouthAfricaMap = () => {
-  const [mounted, setMounted] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -18,7 +18,7 @@ export const SouthAfricaMap = () => {
         iconRetinaUrl: '/marker-icon-2x.png',
         shadowUrl: '/marker-shadow.png',
       });
-      setMounted(true);
+      setIsMounted(true);
     }
   }, []);
 
@@ -34,7 +34,8 @@ export const SouthAfricaMap = () => {
     },
   });
 
-  if (!mounted || typeof window === 'undefined') {
+  // Early return for server-side rendering or when component is not mounted
+  if (!isMounted || typeof window === 'undefined') {
     return <div className="h-[400px] w-full bg-muted" />;
   }
 
@@ -47,8 +48,8 @@ export const SouthAfricaMap = () => {
         scrollWheelZoom={false}
       >
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {creches?.map((creche) => (
           <CrecheMarker
