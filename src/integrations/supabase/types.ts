@@ -656,6 +656,45 @@ export type Database = {
         }
         Relationships: []
       }
+      http_log: {
+        Row: {
+          duration: number | null
+          error: string | null
+          id: string
+          ip_address: string | null
+          method: string | null
+          path: string | null
+          request_id: string | null
+          request_time: string | null
+          status: number | null
+          user_agent: string | null
+        }
+        Insert: {
+          duration?: number | null
+          error?: string | null
+          id?: string
+          ip_address?: string | null
+          method?: string | null
+          path?: string | null
+          request_id?: string | null
+          request_time?: string | null
+          status?: number | null
+          user_agent?: string | null
+        }
+        Update: {
+          duration?: number | null
+          error?: string | null
+          id?: string
+          ip_address?: string | null
+          method?: string | null
+          path?: string | null
+          request_id?: string | null
+          request_time?: string | null
+          status?: number | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       invoice_items: {
         Row: {
           discount: number | null
