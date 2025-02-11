@@ -1,8 +1,11 @@
 
 import { MetricCard } from "@/components/dashboard/MetricCard";
+import { EnrollmentStats } from "@/components/dashboard/EnrollmentStats";
+import { SouthAfricaMap } from "@/components/map/SouthAfricaMap";
 import { Users, School, Clock, AlertCircle, TrendingUp, DollarSign } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Card } from "@/components/ui/card";
 
 const Index = () => {
   const { data: creches } = useQuery({
@@ -51,6 +54,22 @@ const Index = () => {
   const pendingApplications = applications?.filter(a => a.application_status === 'New').length || 0;
   const monthlyRevenue = creches?.reduce((acc, creche) => acc + (creche.monthly_price || 0), 0) || 0;
 
+  // Calculate enrollment stats by province
+  const enrollmentByProvince = creches?.reduce((acc: any[], creche) => {
+    const provinceStats = acc.find(p => p.province === creche.province);
+    if (provinceStats) {
+      provinceStats.creches += 1;
+      provinceStats.students += students?.filter(s => s.creche_id === creche.id).length || 0;
+    } else {
+      acc.push({
+        province: creche.province || 'Unknown',
+        creches: 1,
+        students: students?.filter(s => s.creche_id === creche.id).length || 0
+      });
+    }
+    return acc;
+  }, []) || [];
+
   return (
     <div className="min-h-screen bg-background">
       <main className="p-8 pt-20">
@@ -87,6 +106,14 @@ const Index = () => {
             icon={<DollarSign className="h-5 w-5" />}
             trend={{ value: 15, isPositive: true }}
           />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4">Creche Locations</h2>
+            <SouthAfricaMap />
+          </Card>
+          <EnrollmentStats data={enrollmentByProvince} />
         </div>
       </main>
     </div>

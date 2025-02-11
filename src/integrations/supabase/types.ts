@@ -448,8 +448,10 @@ export type Database = {
           phone_number: string | null
           plan: string | null
           price: number | null
+          province: string | null
           registered: boolean | null
           services: Json | null
+          suburb: string | null
           telegram_number: string | null
           twitter_url: string | null
           updated_at: string | null
@@ -486,8 +488,10 @@ export type Database = {
           phone_number?: string | null
           plan?: string | null
           price?: number | null
+          province?: string | null
           registered?: boolean | null
           services?: Json | null
+          suburb?: string | null
           telegram_number?: string | null
           twitter_url?: string | null
           updated_at?: string | null
@@ -524,8 +528,10 @@ export type Database = {
           phone_number?: string | null
           plan?: string | null
           price?: number | null
+          province?: string | null
           registered?: boolean | null
           services?: Json | null
+          suburb?: string | null
           telegram_number?: string | null
           twitter_url?: string | null
           updated_at?: string | null
