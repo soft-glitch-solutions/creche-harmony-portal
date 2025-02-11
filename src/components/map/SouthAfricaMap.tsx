@@ -7,18 +7,18 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { CrecheMarker } from './CrecheMarker';
 
-// Fix the marker icon issue in leaflet
-useEffect(() => {
-  // Ensure this only runs once on mount
-  delete (L.Icon.Default.prototype as any)._getIconUrl;
-  L.Icon.Default.mergeOptions({
-    iconUrl: '/marker-icon.png',
-    iconRetinaUrl: '/marker-icon-2x.png',
-    shadowUrl: '/marker-shadow.png',
-  });
-}, []);
-
 export const SouthAfricaMap = () => {
+  // Fix the marker icon issue in leaflet
+  useEffect(() => {
+    // Ensure this only runs once on mount
+    delete (L.Icon.Default.prototype as any)._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconUrl: '/marker-icon.png',
+      iconRetinaUrl: '/marker-icon-2x.png',
+      shadowUrl: '/marker-shadow.png',
+    });
+  }, []);
+
   const { data: creches } = useQuery({
     queryKey: ['creches'],
     queryFn: async () => {
