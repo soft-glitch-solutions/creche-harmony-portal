@@ -111,7 +111,6 @@ const Index = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
           <Card className="p-6">
             <h2 className="text-xl font-semibold mb-4">Creche Locations</h2>
-            <SouthAfricaMap />
           </Card>
           <EnrollmentStats data={enrollmentByProvince} />
         </div>
