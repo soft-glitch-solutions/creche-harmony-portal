@@ -1332,9 +1332,12 @@ export type Database = {
         Row: {
           category: string
           created_at: string | null
+          creche_id: string | null
           id: string
           message: string
-          status: string | null
+          priority: string | null
+          resolved_at: string | null
+          status: Database["public"]["Enums"]["support_request_status"] | null
           title: string
           updated_at: string | null
           user_id: string | null
@@ -1342,9 +1345,12 @@ export type Database = {
         Insert: {
           category: string
           created_at?: string | null
+          creche_id?: string | null
           id?: string
           message: string
-          status?: string | null
+          priority?: string | null
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["support_request_status"] | null
           title: string
           updated_at?: string | null
           user_id?: string | null
@@ -1352,14 +1358,25 @@ export type Database = {
         Update: {
           category?: string
           created_at?: string | null
+          creche_id?: string | null
           id?: string
           message?: string
-          status?: string | null
+          priority?: string | null
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["support_request_status"] | null
           title?: string
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "support_requests_creche_id_fkey"
+            columns: ["creche_id"]
+            isOneToOne: false
+            referencedRelation: "creches"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       support_tickets: {
         Row: {
@@ -1798,6 +1815,12 @@ export type Database = {
     }
     Enums: {
       help_category: "documentation" | "faq" | "tutorial"
+      support_request_status:
+        | "open"
+        | "in_progress"
+        | "on_hold"
+        | "resolved"
+        | "closed"
     }
     CompositeTypes: {
       [_ in never]: never
