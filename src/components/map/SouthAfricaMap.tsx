@@ -8,7 +8,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { CrecheMarker } from './CrecheMarker';
 
 export const SouthAfricaMap = () => {
-  const [map, setMap] = useState<L.Map | null>(null);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -44,11 +43,6 @@ export const SouthAfricaMap = () => {
     <div className="h-[400px] w-full relative">
       {isMounted && (
         <MapContainer
-          ref={(mapRef) => {
-            if (mapRef) {
-              setMap(mapRef);
-            }
-          }}
           center={[-30.5595, 22.9375]}
           zoom={5}
           className="h-full w-full"
