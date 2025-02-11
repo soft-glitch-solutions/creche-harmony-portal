@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { 
@@ -28,9 +29,9 @@ interface SupportTicket {
   created_at: string;
   updated_at: string;
   resolved_at?: string;
-  organization?: { name: string };
-  creche?: { name: string };
-  assigned_user?: { email: string };
+  organization?: { name: string } | null;
+  creche?: { name: string } | null;
+  assigned_user?: { email: string } | null;
 }
 
 const Support = () => {
@@ -66,7 +67,7 @@ const Support = () => {
             status:status_id(id, name, color),
             organization:organization_id(name),
             creche:creche_id(name),
-            assigned_user:assigned_to(email)
+            assigned_user:users!support_tickets_assigned_to_fkey(email)
           `)
           .order("created_at", { ascending: false });
 
@@ -80,7 +81,7 @@ const Support = () => {
           id: request.id,
           title: request.title,
           description: request.message,
-          status: { id: '1', name: 'New', color: '#ff0000' }, // Assuming this is your "New" status ID
+          status: { id: '1', name: 'New', color: '#ff0000' },
           priority: 'medium',
           created_by: request.user_id,
           creche_id: request.creche_id,
