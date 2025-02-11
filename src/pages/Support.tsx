@@ -67,7 +67,7 @@ const Support = () => {
             status:status_id(id, name, color),
             organization:organization_id(name),
             creche:creche_id(name),
-            assigned_user:users!support_tickets_assigned_to_fkey(email)
+            assigned_user:users(email)
           `)
           .order("created_at", { ascending: false });
 
