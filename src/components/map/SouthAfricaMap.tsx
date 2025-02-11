@@ -8,17 +8,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { CrecheMarker } from './CrecheMarker';
 
 export const SouthAfricaMap = () => {
-  const [isClient, setIsClient] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Fix the marker icon issue in leaflet
-    delete (L.Icon.Default.prototype as any)._getIconUrl;
-    L.Icon.Default.mergeOptions({
-      iconUrl: '/marker-icon.png',
-      iconRetinaUrl: '/marker-icon-2x.png',
-      shadowUrl: '/marker-shadow.png',
-    });
-    setIsClient(true);
+    if (typeof window !== 'undefined') {
+      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconUrl: '/marker-icon.png',
+        iconRetinaUrl: '/marker-icon-2x.png',
+        shadowUrl: '/marker-shadow.png',
+      });
+      setMounted(true);
+    }
   }, []);
 
   const { data: creches } = useQuery({
@@ -33,16 +34,16 @@ export const SouthAfricaMap = () => {
     },
   });
 
-  if (!isClient) {
+  if (!mounted || typeof window === 'undefined') {
     return <div className="h-[400px] w-full bg-muted" />;
   }
 
   return (
-    <div style={{ height: '400px', width: '100%', position: 'relative' }}>
+    <div className="h-[400px] w-full relative">
       <MapContainer
         center={[-30.5595, 22.9375]}
         zoom={5}
-        style={{ height: '100%', width: '100%' }}
+        className="h-full w-full"
         scrollWheelZoom={false}
       >
         <TileLayer

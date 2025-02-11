@@ -15,7 +15,7 @@ type CrecheMarkerProps = {
 export const CrecheMarker = ({ id, name, latitude, longitude, province, suburb }: CrecheMarkerProps) => {
   const navigate = useNavigate();
 
-  if (!latitude || !longitude) {
+  if (!latitude || !longitude || typeof latitude !== 'number' || typeof longitude !== 'number') {
     return null;
   }
 
@@ -29,7 +29,9 @@ export const CrecheMarker = ({ id, name, latitude, longitude, province, suburb }
       <Popup>
         <div className="p-2">
           <h3 className="font-semibold">{name}</h3>
-          <p className="text-sm text-muted-foreground">{suburb}, {province}</p>
+          <p className="text-sm text-muted-foreground">
+            {suburb}, {province}
+          </p>
         </div>
       </Popup>
     </Marker>
