@@ -30,31 +30,40 @@ serve(async (req) => {
     // Find the webhook configuration
     const { data: webhook, error: webhookError } = await supabaseClient
       .from('webhook_configurations')
-      .select('id, creche_id')
+      .select('*')
       .eq('webhook_key', webhookKey)
+      .eq('enabled', true)
       .single()
 
     if (webhookError || !webhook) {
-      throw new Error('Invalid webhook key')
+      throw new Error('Invalid webhook key or webhook is disabled')
     }
 
     // Parse the payload
     const payload = await req.json()
 
-    // Create application from webhook data
-    const { error: applicationError } = await supabaseClient
-      .from('applications')
-      .insert({
-        creche_id: webhook.creche_id,
-        parent_name: payload.name || 'Unknown',
-        parent_email: payload.email,
-        parent_phone_number: payload.phone || 'Unknown',
-        message: payload.message || '',
-        source: 'webhook',
-      })
+    // Map the fields according to the configuration
+    const mappedData: Record<string, any> = {}
+    const fieldsMapping = webhook.fields_mapping || {}
 
-    if (applicationError) {
-      throw applicationError
+    // Apply field mapping
+    Object.entries(fieldsMapping).forEach(([sourceField, targetField]) => {
+      if (payload[sourceField] !== undefined) {
+        mappedData[targetField] = payload[sourceField]
+      }
+    });
+
+    // Add required fields based on target table
+    mappedData.creche_id = webhook.creche_id
+    mappedData.source = 'webhook'
+
+    // Insert data into the target table
+    const { error: insertError } = await supabaseClient
+      .from(webhook.target_table)
+      .insert(mappedData)
+
+    if (insertError) {
+      throw insertError
     }
 
     // Log the webhook request
@@ -75,7 +84,11 @@ serve(async (req) => {
       .eq('id', webhook.id)
 
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ 
+        success: true,
+        message: `Data successfully inserted into ${webhook.target_table}`,
+        mapped_data: mappedData
+      }),
       { 
         headers: { 
           ...corsHeaders,
@@ -87,6 +100,20 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error processing webhook:', error)
+
+    // Log the error
+    if (error.webhook_id) {
+      await supabaseClient
+        .from('webhook_logs')
+        .insert({
+          webhook_id: error.webhook_id,
+          payload: error.payload,
+          status: 'error',
+          error_message: error.message,
+          ip_address: req.headers.get('x-forwarded-for') || 'unknown',
+          user_agent: req.headers.get('user-agent') || 'unknown',
+        })
+    }
 
     return new Response(
       JSON.stringify({ 

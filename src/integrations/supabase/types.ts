@@ -1657,33 +1657,42 @@ export type Database = {
         Row: {
           created_at: string | null
           creche_id: string | null
+          enabled: boolean | null
+          fields_mapping: Json | null
           id: string
           last_used_at: string | null
           name: string
           source: string | null
           status: string | null
+          target_table: string | null
           updated_at: string | null
           webhook_key: string
         }
         Insert: {
           created_at?: string | null
           creche_id?: string | null
+          enabled?: boolean | null
+          fields_mapping?: Json | null
           id?: string
           last_used_at?: string | null
           name: string
           source?: string | null
           status?: string | null
+          target_table?: string | null
           updated_at?: string | null
           webhook_key?: string
         }
         Update: {
           created_at?: string | null
           creche_id?: string | null
+          enabled?: boolean | null
+          fields_mapping?: Json | null
           id?: string
           last_used_at?: string | null
           name?: string
           source?: string | null
           status?: string | null
+          target_table?: string | null
           updated_at?: string | null
           webhook_key?: string
         }
