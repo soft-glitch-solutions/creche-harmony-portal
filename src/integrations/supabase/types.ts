@@ -1429,6 +1429,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "support_tickets_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "support_tickets_creche_id_fkey"
             columns: ["creche_id"]
             isOneToOne: false
