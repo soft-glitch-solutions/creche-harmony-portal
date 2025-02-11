@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -8,6 +8,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { CrecheMarker } from './CrecheMarker';
 
 export const SouthAfricaMap = () => {
+  const [isMounted, setIsMounted] = useState(false);
+
   // Fix the marker icon issue in leaflet
   useEffect(() => {
     // Ensure this only runs once on mount
@@ -17,6 +19,7 @@ export const SouthAfricaMap = () => {
       iconRetinaUrl: '/marker-icon-2x.png',
       shadowUrl: '/marker-shadow.png',
     });
+    setIsMounted(true);
   }, []);
 
   const { data: creches } = useQuery({
@@ -32,7 +35,7 @@ export const SouthAfricaMap = () => {
   });
 
   // Ensure the MapContainer is only rendered on the client side
-  if (typeof window === 'undefined') return null;
+  if (!isMounted || typeof window === 'undefined') return null;
 
   return (
     <div style={{ height: '400px', width: '100%', position: 'relative' }}>
