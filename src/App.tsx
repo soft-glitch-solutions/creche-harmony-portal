@@ -19,6 +19,7 @@ import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import System from "./pages/System";
 import CrehePerformance from "./pages/reports/CrehePerformance";
+import FinancialOverview from "./pages/reports/FinancialOverview";
 
 const queryClient = new QueryClient();
 
@@ -88,6 +89,17 @@ const App = () => (
                   <>
                     <TopNav />
                     <CrehePerformance />
+                  </>
+                </ProtectedRoute>
+              }
+            />
+                                      <Route
+              path="/reports/financial-overview"
+              element={
+                <ProtectedRoute>
+                  <>
+                    <TopNav />
+                    <FinancialOverview />
                   </>
                 </ProtectedRoute>
               }
