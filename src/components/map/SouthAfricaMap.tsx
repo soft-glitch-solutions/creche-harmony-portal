@@ -6,6 +6,11 @@ import L from 'leaflet';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { CrecheMarker } from './CrecheMarker';
+import dynamic from 'next/dynamic';
+
+const MapComponent = dynamic(() => Promise.resolve(MapContainer), {
+  ssr: false
+});
 
 export const SouthAfricaMap = () => {
   const [isMounted, setIsMounted] = useState(false);
@@ -40,29 +45,30 @@ export const SouthAfricaMap = () => {
 
   return (
     <div className="h-[400px] w-full relative">
-      <MapContainer
-        key="map"
-        center={[-30.5595, 22.9375]}
-        zoom={5}
-        className="h-full w-full"
-        scrollWheelZoom={false}
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        {creches?.map((creche) => (
-          <CrecheMarker
-            key={creche.id}
-            id={creche.id}
-            name={creche.name}
-            latitude={creche.latitude}
-            longitude={creche.longitude}
-            province={creche.province}
-            suburb={creche.suburb}
+      <div id="map-container">
+        <MapComponent
+          center={[-30.5595, 22.9375]}
+          zoom={5}
+          className="h-full w-full"
+          scrollWheelZoom={false}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-        ))}
-      </MapContainer>
+          {creches?.map((creche) => (
+            <CrecheMarker
+              key={creche.id}
+              id={creche.id}
+              name={creche.name}
+              latitude={creche.latitude}
+              longitude={creche.longitude}
+              province={creche.province}
+              suburb={creche.suburb}
+            />
+          ))}
+        </MapComponent>
+      </div>
     </div>
   );
 };

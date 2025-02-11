@@ -32,20 +32,18 @@ export const CrecheMarker = ({
   };
 
   return (
-    <div key={id}>
-      <Marker 
-        position={[latitude, longitude]} 
-        eventHandlers={{ click: handleClick }}
-      >
-        <Popup>
-          <div className="p-2">
-            <h3 className="font-semibold">{name}</h3>
-            <p className="text-sm text-muted-foreground">
-              {suburb}, {province}
-            </p>
-          </div>
-        </Popup>
-      </Marker>
-    </div>
+    <Marker 
+      position={[latitude, longitude]} 
+      eventHandlers={{ click: handleClick }}
+    >
+      <Popup>
+        <div className="p-2">
+          <h3 className="font-semibold">{name}</h3>
+          <p className="text-sm text-muted-foreground">
+            {suburb}, {province}
+          </p>
+        </div>
+      </Popup>
+    </Marker>
   );
 };
