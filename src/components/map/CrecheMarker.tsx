@@ -26,7 +26,7 @@ export const CrecheMarker = ({
     return null;
   }
 
-  const handleClick = (e: LeafletMouseEvent) => {
+  const handleMarkerClick = (e: LeafletMouseEvent) => {
     e.originalEvent.stopPropagation();
     navigate(`/creches/${id}`);
   };
@@ -34,7 +34,7 @@ export const CrecheMarker = ({
   return (
     <Marker 
       position={[latitude, longitude]} 
-      eventHandlers={{ click: handleClick }}
+      eventHandlers={{ click: handleMarkerClick }}
     >
       <Popup>
         <div className="p-2">
