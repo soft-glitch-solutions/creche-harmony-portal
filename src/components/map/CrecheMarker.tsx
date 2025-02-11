@@ -15,12 +15,14 @@ type CrecheMarkerProps = {
 export const CrecheMarker = ({ id, name, latitude, longitude, province, suburb }: CrecheMarkerProps) => {
   const navigate = useNavigate();
 
+  if (!latitude || !longitude) {
+    return null;
+  }
+
   const handleClick = (e: LeafletMouseEvent) => {
     e.originalEvent.stopPropagation();
     navigate(`/creches/${id}`);
   };
-
-  if (!latitude || !longitude) return null;
 
   return (
     <Marker position={[latitude, longitude]} eventHandlers={{ click: handleClick }}>

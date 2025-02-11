@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useQuery } from '@tanstack/react-query';
@@ -8,18 +8,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { CrecheMarker } from './CrecheMarker';
 
 export const SouthAfricaMap = () => {
-  const [isMounted, setIsMounted] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
-  // Fix the marker icon issue in leaflet
   useEffect(() => {
-    // Ensure this only runs once on mount
+    // Fix the marker icon issue in leaflet
     delete (L.Icon.Default.prototype as any)._getIconUrl;
     L.Icon.Default.mergeOptions({
       iconUrl: '/marker-icon.png',
       iconRetinaUrl: '/marker-icon-2x.png',
       shadowUrl: '/marker-shadow.png',
     });
-    setIsMounted(true);
+    setIsClient(true);
   }, []);
 
   const { data: creches } = useQuery({
@@ -34,8 +33,9 @@ export const SouthAfricaMap = () => {
     },
   });
 
-  // Ensure the MapContainer is only rendered on the client side
-  if (!isMounted || typeof window === 'undefined') return null;
+  if (!isClient) {
+    return <div className="h-[400px] w-full bg-muted" />;
+  }
 
   return (
     <div style={{ height: '400px', width: '100%', position: 'relative' }}>
