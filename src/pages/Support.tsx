@@ -1,6 +1,5 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { Card } from "@/components/ui/card";
 import { 
   Dialog,
   DialogContent,
@@ -13,101 +12,59 @@ import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { TicketDialog } from "@/components/support/TicketDialog";
-import { TicketList } from "@/components/support/TicketList";
+import { StatusColumn } from "@/components/support/StatusColumn";
+import { SupportRequestList } from "@/components/support/SupportRequestList";
 import { useState } from "react";
-
-interface SupportTicket {
-  id: string;
-  title: string;
-  description: string;
-  status: { id: string; name: string; color: string };
-  priority: string;
-  created_by: string;
-  assigned_to?: string;
-  organization_id?: string;
-  creche_id?: string;
-  created_at: string;
-  updated_at: string;
-  resolved_at?: string;
-  organization?: { name: string } | null;
-  creche?: { name: string } | null;
-  assigned_user?: { email: string } | null;
-}
 
 const Support = () => {
   const { toast } = useToast();
-  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   const { data: tickets = [], isLoading, refetch } = useQuery({
     queryKey: ["support_tickets"],
     queryFn: async () => {
-      try {
-        console.log("Fetching support tickets...");
-        
-        // First, get support requests and convert them to tickets
-        const { data: requests, error: requestsError } = await supabase
-          .from("support_requests")
-          .select(`
-            *,
-            creche:creche_id(id, name)
-          `)
-          .eq('status', 'open');
+      const { data: tickets, error: ticketsError } = await supabase
+        .from("support_tickets")
+        .select(`
+          *,
+          status:status_id(id, name, color),
+          organization:organization_id(name),
+          creche:creche_id(name),
+          assigned_user:users(email)
+        `)
+        .order("created_at", { ascending: false });
 
-        if (requestsError) {
-          console.error("Error fetching support requests:", requestsError);
-          throw requestsError;
-        }
-
-        // Then get existing tickets
-        const { data: existingTickets, error: ticketsError } = await supabase
-          .from("support_tickets")
-          .select(`
-            *,
-            status:status_id(id, name, color),
-            organization:organization_id(name),
-            creche:creche_id(name),
-            assigned_user:users(email)
-          `)
-          .order("created_at", { ascending: false });
-
-        if (ticketsError) {
-          console.error("Error fetching tickets:", ticketsError);
-          throw ticketsError;
-        }
-
-        // Convert support requests to ticket format
-        const requestTickets = requests?.map(request => ({
-          id: request.id,
-          title: request.title,
-          description: request.message,
-          status: { id: '1', name: 'New', color: '#ff0000' },
-          priority: 'medium',
-          created_by: request.user_id,
-          creche_id: request.creche_id,
-          created_at: request.created_at,
-          updated_at: request.updated_at,
-          creche: request.creche,
-          source: 'support_request'
-        })) || [];
-
-        // Combine and return all tickets
-        const allTickets = [...(existingTickets || []), ...requestTickets];
-        console.log("All tickets:", allTickets);
-        return allTickets;
-
-      } catch (error) {
-        console.error("Error in query function:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load support tickets. Please try again later.",
-          variant: "destructive",
-        });
-        return [];
+      if (ticketsError) {
+        console.error("Error fetching tickets:", ticketsError);
+        throw ticketsError;
       }
+
+      return tickets || [];
     },
     retry: 2,
     retryDelay: 1000,
+  });
+
+  const { data: requests = [], refetch: refetchRequests } = useQuery({
+    queryKey: ["support_requests"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("support_requests")
+        .select(`
+          *,
+          creche:creche_id(id, name)
+        `)
+        .is('converted_at', null)
+        .eq('status', 'open');
+
+      if (error) {
+        console.error("Error fetching support requests:", error);
+        throw error;
+      }
+
+      return data || [];
+    },
   });
 
   const ticketsByStatus = {
@@ -126,6 +83,11 @@ const Support = () => {
       </div>
     );
   }
+
+  const handleRequestConverted = () => {
+    refetch();
+    refetchRequests();
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20 px-8">
@@ -159,62 +121,67 @@ const Support = () => {
           </DialogContent>
         </Dialog>
       </div>
+
+      {requests.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold mb-4">Support Requests</h2>
+          <SupportRequestList 
+            requests={requests}
+            onRequestConverted={handleRequestConverted}
+          />
+        </div>
+      )}
       
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
-        <Card className="p-4">
-          <h2 className="font-semibold text-lg mb-4 text-red-600">New</h2>
-          <TicketList 
-            tickets={ticketsByStatus.new} 
-            onTicketClick={(ticket) => {
-              setSelectedTicket(ticket as SupportTicket);
-              setIsDialogOpen(true);
-            }}
-          />
-        </Card>
+        <StatusColumn
+          title="New"
+          color="#EF4444"
+          tickets={ticketsByStatus.new}
+          onTicketClick={(ticket) => {
+            setSelectedTicket(ticket);
+            setIsDialogOpen(true);
+          }}
+        />
 
-        <Card className="p-4">
-          <h2 className="font-semibold text-lg mb-4 text-yellow-600">In Progress</h2>
-          <TicketList 
-            tickets={ticketsByStatus.in_progress}
-            onTicketClick={(ticket) => {
-              setSelectedTicket(ticket as SupportTicket);
-              setIsDialogOpen(true);
-            }}
-          />
-        </Card>
+        <StatusColumn
+          title="In Progress"
+          color="#F59E0B"
+          tickets={ticketsByStatus.in_progress}
+          onTicketClick={(ticket) => {
+            setSelectedTicket(ticket);
+            setIsDialogOpen(true);
+          }}
+        />
 
-        <Card className="p-4">
-          <h2 className="font-semibold text-lg mb-4 text-indigo-600">On Hold</h2>
-          <TicketList 
-            tickets={ticketsByStatus.on_hold}
-            onTicketClick={(ticket) => {
-              setSelectedTicket(ticket as SupportTicket);
-              setIsDialogOpen(true);
-            }}
-          />
-        </Card>
+        <StatusColumn
+          title="On Hold"
+          color="#6366F1"
+          tickets={ticketsByStatus.on_hold}
+          onTicketClick={(ticket) => {
+            setSelectedTicket(ticket);
+            setIsDialogOpen(true);
+          }}
+        />
 
-        <Card className="p-4">
-          <h2 className="font-semibold text-lg mb-4 text-green-600">Resolved</h2>
-          <TicketList 
-            tickets={ticketsByStatus.resolved}
-            onTicketClick={(ticket) => {
-              setSelectedTicket(ticket as SupportTicket);
-              setIsDialogOpen(true);
-            }}
-          />
-        </Card>
+        <StatusColumn
+          title="Resolved"
+          color="#10B981"
+          tickets={ticketsByStatus.resolved}
+          onTicketClick={(ticket) => {
+            setSelectedTicket(ticket);
+            setIsDialogOpen(true);
+          }}
+        />
 
-        <Card className="p-4">
-          <h2 className="font-semibold text-lg mb-4 text-gray-600">Closed</h2>
-          <TicketList 
-            tickets={ticketsByStatus.closed}
-            onTicketClick={(ticket) => {
-              setSelectedTicket(ticket as SupportTicket);
-              setIsDialogOpen(true);
-            }}
-          />
-        </Card>
+        <StatusColumn
+          title="Closed"
+          color="#6B7280"
+          tickets={ticketsByStatus.closed}
+          onTicketClick={(ticket) => {
+            setSelectedTicket(ticket);
+            setIsDialogOpen(true);
+          }}
+        />
       </div>
     </div>
   );

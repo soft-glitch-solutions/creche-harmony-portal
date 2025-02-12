@@ -1337,6 +1337,8 @@ export type Database = {
       support_requests: {
         Row: {
           category: string
+          converted_at: string | null
+          converted_ticket_id: string | null
           created_at: string | null
           creche_id: string | null
           id: string
@@ -1350,6 +1352,8 @@ export type Database = {
         }
         Insert: {
           category: string
+          converted_at?: string | null
+          converted_ticket_id?: string | null
           created_at?: string | null
           creche_id?: string | null
           id?: string
@@ -1363,6 +1367,8 @@ export type Database = {
         }
         Update: {
           category?: string
+          converted_at?: string | null
+          converted_ticket_id?: string | null
           created_at?: string | null
           creche_id?: string | null
           id?: string
@@ -1375,6 +1381,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "support_requests_converted_ticket_id_fkey"
+            columns: ["converted_ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "support_requests_creche_id_fkey"
             columns: ["creche_id"]
@@ -1395,6 +1408,7 @@ export type Database = {
           organization_id: string | null
           priority: string
           resolved_at: string | null
+          source: string | null
           status_id: string | null
           title: string
           updated_at: string | null
@@ -1409,6 +1423,7 @@ export type Database = {
           organization_id?: string | null
           priority?: string
           resolved_at?: string | null
+          source?: string | null
           status_id?: string | null
           title: string
           updated_at?: string | null
@@ -1423,6 +1438,7 @@ export type Database = {
           organization_id?: string | null
           priority?: string
           resolved_at?: string | null
+          source?: string | null
           status_id?: string | null
           title?: string
           updated_at?: string | null
