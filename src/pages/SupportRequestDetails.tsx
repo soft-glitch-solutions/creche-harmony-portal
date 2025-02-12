@@ -29,7 +29,7 @@ const SupportRequestDetails = () => {
         .select(`
           *,
           creche:creche_id(id, name),
-          user:user_id(first_name, last_name, email)
+          users!user_id(first_name, last_name, email)
         `)
         .eq("id", id)
         .single();
@@ -133,20 +133,20 @@ const SupportRequestDetails = () => {
                 </div>
               )}
 
-              {request.user && (
+              {request.users && (
                 <>
                   <div>
                     <h2 className="text-sm font-medium text-gray-500 mb-2">Submitted By</h2>
                     <div className="flex items-center">
                       <User className="w-4 h-4 mr-2" />
-                      {request.user.first_name} {request.user.last_name}
+                      {request.users.first_name} {request.users.last_name}
                     </div>
                   </div>
                   <div>
                     <h2 className="text-sm font-medium text-gray-500 mb-2">Contact Email</h2>
                     <div className="flex items-center">
                       <Mail className="w-4 h-4 mr-2" />
-                      {request.user.email}
+                      {request.users.email}
                     </div>
                   </div>
                 </>
