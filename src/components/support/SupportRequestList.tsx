@@ -1,9 +1,10 @@
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Clock, Building } from "lucide-react";
+import { Clock, Building, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface SupportRequest {
   id: string;
@@ -20,6 +21,7 @@ interface SupportRequestListProps {
 
 export const SupportRequestList = ({ requests, onRequestConverted }: SupportRequestListProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleConvertToTicket = async (request: SupportRequest) => {
     try {
@@ -72,13 +74,23 @@ export const SupportRequestList = ({ requests, onRequestConverted }: SupportRequ
         <Card key={request.id} className="p-4">
           <div className="flex justify-between items-start mb-2">
             <h3 className="font-medium">{request.title}</h3>
-            <Button 
-              variant="secondary" 
-              size="sm"
-              onClick={() => handleConvertToTicket(request)}
-            >
-              Convert to Ticket
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => navigate(`/support/requests/${request.id}`)}
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                View Details
+              </Button>
+              <Button 
+                variant="secondary" 
+                size="sm"
+                onClick={() => handleConvertToTicket(request)}
+              >
+                Convert to Ticket
+              </Button>
+            </div>
           </div>
           <p className="text-sm text-gray-600 mb-3">{request.message}</p>
           <div className="text-xs text-gray-500 space-y-1">

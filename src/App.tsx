@@ -20,6 +20,7 @@ import System from "./pages/System";
 import CrehePerformance from "./pages/reports/CrehePerformance";
 import FinancialOverview from "./pages/reports/FinancialOverview";
 import SupportDetails from "./pages/SupportDetails";
+import SupportRequestDetails from "./pages/SupportRequestDetails";
 
 const queryClient = new QueryClient();
 
@@ -177,6 +178,17 @@ const App = () => (
                   <>
                     <TopNav />
                     <SupportDetails />
+                  </>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/support/requests/:id"
+              element={
+                <ProtectedRoute>
+                  <>
+                    <TopNav />
+                    <SupportRequestDetails />
                   </>
                 </ProtectedRoute>
               }

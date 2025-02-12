@@ -8,18 +8,22 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { TicketDialog } from "@/components/support/TicketDialog";
 import { StatusColumn } from "@/components/support/StatusColumn";
 import { SupportRequestList } from "@/components/support/SupportRequestList";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
 
 const Support = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [showRequests, setShowRequests] = useState(false);
   
   const { data: tickets = [], isLoading, refetch } = useQuery({
     queryKey: ["support_tickets"],
@@ -35,15 +39,9 @@ const Support = () => {
         `)
         .order("created_at", { ascending: false });
 
-      if (ticketsError) {
-        console.error("Error fetching tickets:", ticketsError);
-        throw ticketsError;
-      }
-
+      if (ticketsError) throw ticketsError;
       return tickets || [];
     },
-    retry: 2,
-    retryDelay: 1000,
   });
 
   const { data: requests = [], refetch: refetchRequests } = useQuery({
@@ -58,11 +56,7 @@ const Support = () => {
         .is('converted_at', null)
         .eq('status', 'open');
 
-      if (error) {
-        console.error("Error fetching support requests:", error);
-        throw error;
-      }
-
+      if (error) throw error;
       return data || [];
     },
   });
@@ -93,36 +87,50 @@ const Support = () => {
     <div className="min-h-screen bg-gray-50 pt-20 px-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Support Tickets</h1>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              New Ticket
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>
-                {selectedTicket ? 'Edit Ticket' : 'Create New Ticket'}
-              </DialogTitle>
-            </DialogHeader>
-            <TicketDialog 
-              ticket={selectedTicket}
-              onClose={() => {
-                setIsDialogOpen(false);
-                setSelectedTicket(null);
-              }}
-              onSuccess={() => {
-                refetch();
-                setIsDialogOpen(false);
-                setSelectedTicket(null);
-              }}
-            />
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-4">
+          <Button
+            variant={showRequests ? "default" : "outline"}
+            onClick={() => setShowRequests(!showRequests)}
+          >
+            <MessageSquare className="w-4 h-4 mr-2" />
+            Support Requests
+            {requests.length > 0 && (
+              <Badge variant="secondary" className="ml-2">
+                {requests.length}
+              </Badge>
+            )}
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                New Ticket
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>
+                  {selectedTicket ? 'Edit Ticket' : 'Create New Ticket'}
+                </DialogTitle>
+              </DialogHeader>
+              <TicketDialog 
+                ticket={selectedTicket}
+                onClose={() => {
+                  setIsDialogOpen(false);
+                  setSelectedTicket(null);
+                }}
+                onSuccess={() => {
+                  refetch();
+                  setIsDialogOpen(false);
+                  setSelectedTicket(null);
+                }}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
-      {requests.length > 0 && (
+      {showRequests && requests.length > 0 && (
         <div className="mb-8">
           <h2 className="text-lg font-semibold mb-4">Support Requests</h2>
           <SupportRequestList 
@@ -142,7 +150,6 @@ const Support = () => {
             setIsDialogOpen(true);
           }}
         />
-
         <StatusColumn
           title="In Progress"
           color="#F59E0B"
@@ -152,7 +159,6 @@ const Support = () => {
             setIsDialogOpen(true);
           }}
         />
-
         <StatusColumn
           title="On Hold"
           color="#6366F1"
@@ -162,7 +168,6 @@ const Support = () => {
             setIsDialogOpen(true);
           }}
         />
-
         <StatusColumn
           title="Resolved"
           color="#10B981"
@@ -172,7 +177,6 @@ const Support = () => {
             setIsDialogOpen(true);
           }}
         />
-
         <StatusColumn
           title="Closed"
           color="#6B7280"
