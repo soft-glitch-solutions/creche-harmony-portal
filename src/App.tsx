@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,6 +19,7 @@ import Auth from "./pages/Auth";
 import System from "./pages/System";
 import CrehePerformance from "./pages/reports/CrehePerformance";
 import FinancialOverview from "./pages/reports/FinancialOverview";
+import SupportDetails from "./pages/SupportDetails";
 
 const queryClient = new QueryClient();
 
@@ -82,7 +82,7 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-                          <Route
+            <Route
               path="/reports/creche-performance"
               element={
                 <ProtectedRoute>
@@ -93,7 +93,7 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-                                      <Route
+            <Route
               path="/reports/financial-overview"
               element={
                 <ProtectedRoute>
@@ -166,6 +166,17 @@ const App = () => (
                   <>
                     <TopNav />
                     <System />
+                  </>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/support/:id"
+              element={
+                <ProtectedRoute>
+                  <>
+                    <TopNav />
+                    <SupportDetails />
                   </>
                 </ProtectedRoute>
               }
