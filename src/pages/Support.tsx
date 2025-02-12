@@ -71,7 +71,7 @@ const Support = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-20 px-8">
+      <div className="min-h-screen pt-20 px-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-8">Support Tickets</h1>
         <div className="animate-pulse">Loading tickets...</div>
       </div>
@@ -84,7 +84,7 @@ const Support = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20 px-8">
+    <div className="min-h-screen pt-20 px-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Support Tickets</h1>
         <div className="flex gap-4">
