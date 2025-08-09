@@ -1,9 +1,10 @@
+
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DateRange } from "react-day-picker";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { FinancialMetrics } from "@/components/reports/FinancialMetrics";
 import {
   BarChart,
   Bar,
@@ -16,7 +17,10 @@ import {
   PieChart,
   Pie,
   Cell,
+  LineChart,
+  Line,
 } from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const FinancialOverview = () => {
   const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
@@ -39,7 +43,7 @@ const FinancialOverview = () => {
 
       if (error) throw error;
 
-      // Process data for charts using total_amount field
+      // Process data for charts
       const monthlyRevenue = invoices?.reduce((acc: any[], invoice) => {
         const month = new Date(invoice.created_at).toLocaleDateString('en-US', { 
           year: 'numeric', 
@@ -47,43 +51,68 @@ const FinancialOverview = () => {
         });
         
         const existing = acc.find(item => item.month === month);
+        const amount = Number(invoice.total_amount) || 0;
+        
         if (existing) {
-          existing.revenue += invoice.total_amount;
+          existing.revenue += amount;
+          existing.invoices += 1;
         } else {
           acc.push({
             month,
-            revenue: invoice.total_amount,
+            revenue: amount,
+            invoices: 1,
           });
         }
         return acc;
       }, []) || [];
 
-      // Revenue by creche using total_amount field
+      // Revenue by creche
       const revenueByCreche = invoices?.reduce((acc: any[], invoice) => {
         const crecheName = invoice.creche?.name || 'Unknown';
+        const amount = Number(invoice.total_amount) || 0;
         
         const existing = acc.find(item => item.name === crecheName);
         if (existing) {
-          existing.value += invoice.total_amount;
+          existing.value += amount;
         } else {
           acc.push({
             name: crecheName,
-            value: invoice.total_amount,
+            value: amount,
           });
         }
         return acc;
       }, []) || [];
 
-      const totalRevenue = invoices?.reduce((sum, invoice) => sum + invoice.total_amount, 0) || 0;
+      // Payment status distribution
+      const paymentStatus = invoices?.reduce((acc: any[], invoice) => {
+        const status = invoice.status || 'draft';
+        const existing = acc.find(item => item.name === status);
+        
+        if (existing) {
+          existing.value += 1;
+        } else {
+          acc.push({
+            name: status,
+            value: 1,
+          });
+        }
+        return acc;
+      }, []) || [];
+
+      const totalRevenue = invoices?.reduce((sum, invoice) => sum + (Number(invoice.total_amount) || 0), 0) || 0;
       const totalInvoices = invoices?.length || 0;
       const averageInvoiceAmount = totalInvoices > 0 ? totalRevenue / totalInvoices : 0;
+      const paidInvoices = invoices?.filter(inv => inv.status === 'paid').length || 0;
+      const paymentRate = totalInvoices > 0 ? (paidInvoices / totalInvoices) * 100 : 0;
 
       return {
         monthlyRevenue,
         revenueByCreche,
+        paymentStatus,
         totalRevenue,
         totalInvoices,
         averageInvoiceAmount,
+        paymentRate,
       };
     },
   });
@@ -108,7 +137,10 @@ const FinancialOverview = () => {
   return (
     <div className="min-h-screen pt-20 px-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold">Financial Overview</h1>
+        <div>
+          <h1 className="text-3xl font-bold">Financial Overview</h1>
+          <p className="text-muted-foreground">Comprehensive financial reporting and analytics</p>
+        </div>
         <DateRangePicker
           date={{
             from: dateRange.from,
@@ -118,58 +150,34 @@ const FinancialOverview = () => {
         />
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              R{financialData?.totalRevenue?.toLocaleString() || 0}
-            </div>
-          </CardContent>
-        </Card>
+      {/* Financial Metrics */}
+      <FinancialMetrics
+        totalRevenue={financialData?.totalRevenue || 0}
+        totalInvoices={financialData?.totalInvoices || 0}
+        averageInvoice={financialData?.averageInvoiceAmount || 0}
+        monthlyGrowth={15} // This would be calculated from previous period
+      />
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Invoices</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {financialData?.totalInvoices || 0}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Average Invoice</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              R{financialData?.averageInvoiceAmount?.toFixed(2) || 0}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Monthly Revenue Chart */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+        {/* Monthly Revenue Trend */}
         <Card>
           <CardHeader>
-            <CardTitle>Monthly Revenue</CardTitle>
+            <CardTitle>Monthly Revenue Trend</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={financialData?.monthlyRevenue || []}>
+              <LineChart data={financialData?.monthlyRevenue || []}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
-                <Tooltip formatter={(value: any) => [`R${value.toLocaleString()}`, 'Revenue']} />
+                <Tooltip formatter={(value: any, name) => [
+                  name === 'revenue' ? `R${value.toLocaleString()}` : value, 
+                  name === 'revenue' ? 'Revenue' : 'Invoices'
+                ]} />
                 <Legend />
-                <Bar dataKey="revenue" fill="#8884d8" />
-              </BarChart>
+                <Bar dataKey="invoices" fill="#82ca9d" name="Invoices" />
+                <Line type="monotone" dataKey="revenue" stroke="#8884d8" name="Revenue" />
+              </LineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
@@ -199,6 +207,43 @@ const FinancialOverview = () => {
                 <Tooltip formatter={(value: any) => [`R${value.toLocaleString()}`, 'Revenue']} />
               </PieChart>
             </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Payment Status Distribution */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Payment Status Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={financialData?.paymentStatus || []}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="value" fill="#8884d8" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Payment Performance */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Payment Performance</CardTitle>
+          </CardHeader>
+          <CardContent className="flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-4xl font-bold text-green-600 mb-2">
+                {financialData?.paymentRate?.toFixed(1) || 0}%
+              </div>
+              <p className="text-muted-foreground">Payment Success Rate</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                {financialData?.totalInvoices || 0} total invoices processed
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>

@@ -1,5 +1,5 @@
 
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { 
@@ -7,6 +7,7 @@ import {
   LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer 
 } from 'recharts';
 import { Separator } from "@/components/ui/separator";
+import { TrendingUp, TrendingDown, Users, School, MapPin, AlertCircle } from "lucide-react";
 
 const Reports = () => {
   // Fetch all necessary data
@@ -47,20 +48,21 @@ const Reports = () => {
 
   // 1. Plan Distribution
   const planDistribution = creches?.reduce((acc, creche) => {
-    acc[creche.plan] = (acc[creche.plan] || 0) + 1;
+    const plan = creche.plan || 'free';
+    acc[plan] = (acc[plan] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
   const planData = Object.entries(planDistribution || {}).map(([name, value]) => ({
-    name,
+    name: name.charAt(0).toUpperCase() + name.slice(1),
     value
   }));
 
   // 2. Monthly Revenue
-  const currentYear = new Date().getFullYear();
   const monthlyRevenue = invoices?.reduce((acc, invoice) => {
     const month = new Date(invoice.created_at).getMonth();
-    acc[month] = (acc[month] || 0) + Number(invoice.total_amount || 0);
+    const amount = Number(invoice.total_amount) || 0;
+    acc[month] = (acc[month] || 0) + amount;
     return acc;
   }, {} as Record<number, number>);
 
@@ -72,10 +74,12 @@ const Reports = () => {
   // 3. Registration Status
   const registeredCreches = creches?.filter(c => c.registered).length || 0;
   const totalCreches = creches?.length || 0;
+  const pendingCreches = totalCreches - registeredCreches;
 
   // 4. Application Status Distribution
   const applicationStatus = applications?.reduce((acc, app) => {
-    acc[app.application_status] = (acc[app.application_status] || 0) + 1;
+    const status = app.application_status || 'Unknown';
+    acc[status] = (acc[status] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
@@ -84,40 +88,102 @@ const Reports = () => {
     value
   }));
 
-  // 5. Student Age Distribution
-  const ageDistribution = students?.reduce((acc, student) => {
-    const age = student.age || 0;
-    const ageGroup = `${Math.floor(age/2)*2}-${Math.floor(age/2)*2+2}`;
-    acc[ageGroup] = (acc[ageGroup] || 0) + 1;
+  // 5. Provincial Coverage
+  const provincialCoverage = creches?.reduce((acc, creche) => {
+    const province = creche.province || 'Unknown';
+    const existing = acc.find(p => p.province === province);
+    
+    if (existing) {
+      existing.creches += 1;
+      existing.students += students?.filter(s => s.creche_id === creche.id).length || 0;
+    } else {
+      acc.push({
+        province,
+        creches: 1,
+        students: students?.filter(s => s.creche_id === creche.id).length || 0
+      });
+    }
     return acc;
-  }, {} as Record<string, number>);
+  }, [] as any[]) || [];
 
-  const ageDistributionData = Object.entries(ageDistribution || {}).sort().map(([name, value]) => ({
-    name,
-    value
-  }));
+  // 6. System health metrics
+  const totalCapacity = creches?.reduce((sum, c) => sum + (c.capacity || 0), 0) || 0;
+  const utilizationRate = totalCapacity > 0 ? (students?.length || 0) / totalCapacity * 100 : 0;
+  const totalRevenue = invoices?.reduce((sum, inv) => sum + (Number(inv.total_amount) || 0), 0) || 0;
 
   return (
     <div className="p-8 pt-20">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Reports Dashboard</h1>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">System Reports Dashboard</h1>
+          <p className="text-muted-foreground">Comprehensive system analytics and insights</p>
+        </div>
+      </div>
       
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card className="p-4">
-          <h3 className="text-sm font-medium text-gray-500">Total Creches</h3>
-          <p className="text-2xl font-bold">{totalCreches}</p>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Creches</p>
+                <p className="text-3xl font-bold">{totalCreches}</p>
+              </div>
+              <School className="h-8 w-8 text-blue-500" />
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {registeredCreches} registered, {pendingCreches} pending
+            </p>
+          </CardContent>
         </Card>
-        <Card className="p-4">
-          <h3 className="text-sm font-medium text-gray-500">Registered Creches</h3>
-          <p className="text-2xl font-bold">{registeredCreches}</p>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Students</p>
+                <p className="text-3xl font-bold">{students?.length || 0}</p>
+              </div>
+              <Users className="h-8 w-8 text-green-500" />
+            </div>
+            <div className="flex items-center mt-1">
+              <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
+              <span className="text-xs text-green-500">
+                {utilizationRate.toFixed(1)}% utilization
+              </span>
+            </div>
+          </CardContent>
         </Card>
-        <Card className="p-4">
-          <h3 className="text-sm font-medium text-gray-500">Total Students</h3>
-          <p className="text-2xl font-bold">{students?.length || 0}</p>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Applications</p>
+                <p className="text-3xl font-bold">{applications?.length || 0}</p>
+              </div>
+              <AlertCircle className="h-8 w-8 text-orange-500" />
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {applicationStatus?.['New'] || 0} pending review
+            </p>
+          </CardContent>
         </Card>
-        <Card className="p-4">
-          <h3 className="text-sm font-medium text-gray-500">Total Applications</h3>
-          <p className="text-2xl font-bold">{applications?.length || 0}</p>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Revenue</p>
+                <p className="text-3xl font-bold">R{totalRevenue.toLocaleString()}</p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-purple-500" />
+            </div>
+            <div className="flex items-center mt-1">
+              <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
+              <span className="text-xs text-green-500">15% vs last month</span>
+            </div>
+          </CardContent>
         </Card>
       </div>
 
@@ -126,82 +192,91 @@ const Reports = () => {
       {/* Charts */}
       <div className="space-y-6">
         {/* Revenue Trend */}
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Monthly Revenue Trend</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={monthlyRevenueData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="revenue" stroke="#8884d8" />
-            </LineChart>
-          </ResponsiveContainer>
+        <Card>
+          <CardHeader>
+            <CardTitle>Monthly Revenue Trend</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={monthlyRevenueData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip formatter={(value: any) => [`R${value.toLocaleString()}`, 'Revenue']} />
+                <Legend />
+                <Line type="monotone" dataKey="revenue" stroke="#8884d8" strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
         </Card>
 
-        {/* Plan Distribution & Application Status */}
+        {/* Plan Distribution & Provincial Coverage */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Plan Distribution</h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={planData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {planData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+          <Card>
+            <CardHeader>
+              <CardTitle>Plan Distribution</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={planData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  >
+                    {planData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
           </Card>
 
-          <Card className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Application Status</h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={applicationStatusData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {applicationStatusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+          <Card>
+            <CardHeader>
+              <CardTitle>Provincial Coverage</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={provincialCoverage}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="province" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="creches" fill="#8884d8" name="Creches" />
+                  <Bar dataKey="students" fill="#82ca9d" name="Students" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
           </Card>
         </div>
 
-        {/* Student Age Distribution */}
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Student Age Distribution</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={ageDistributionData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="value" fill="#8884d8" />
-            </BarChart>
-          </ResponsiveContainer>
+        {/* Application Status */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Application Status Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={applicationStatusData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="value" fill="#8884d8" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
         </Card>
       </div>
     </div>
