@@ -3,6 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UserManagement from "./UserManagement";
 import WebhookIntegration from "@/components/settings/WebhookIntegration";
+import SystemMonitoring from "@/components/settings/SystemMonitoring";
+import FeatureManagement from "@/components/settings/FeatureManagement";
+import EventsNotifications from "@/components/settings/EventsNotifications";
+import ReportsManagement from "@/components/settings/ReportsManagement";
 
 const Settings = () => {
   return (
@@ -10,11 +14,14 @@ const Settings = () => {
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Settings</h1>
       
       <Tabs defaultValue="user-management" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="user-management">User Management</TabsTrigger>
-          <TabsTrigger value="roles-permissions">Roles & Permissions</TabsTrigger>
-          <TabsTrigger value="integrations">Integrations</TabsTrigger>
-          <TabsTrigger value="general">General</TabsTrigger>
+        <TabsList className="grid grid-cols-7 w-full">
+          <TabsTrigger value="user-management">Users</TabsTrigger>
+          <TabsTrigger value="roles-permissions">Roles</TabsTrigger>
+          <TabsTrigger value="monitoring">Monitoring</TabsTrigger>
+          <TabsTrigger value="features">Features</TabsTrigger>
+          <TabsTrigger value="events">Events</TabsTrigger>
+          <TabsTrigger value="reports">Reports</TabsTrigger>
+          <TabsTrigger value="integrations">Integration</TabsTrigger>
         </TabsList>
 
         <TabsContent value="user-management">
@@ -52,6 +59,22 @@ const Settings = () => {
           </Card>
         </TabsContent>
 
+        <TabsContent value="monitoring">
+          <SystemMonitoring />
+        </TabsContent>
+
+        <TabsContent value="features">
+          <FeatureManagement />
+        </TabsContent>
+
+        <TabsContent value="events">
+          <EventsNotifications />
+        </TabsContent>
+
+        <TabsContent value="reports">
+          <ReportsManagement />
+        </TabsContent>
+
         <TabsContent value="integrations">
           <Card>
             <CardHeader>
@@ -59,17 +82,6 @@ const Settings = () => {
             </CardHeader>
             <CardContent>
               <WebhookIntegration />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="general">
-          <Card>
-            <CardHeader>
-              <CardTitle>General Settings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">General settings functionality coming soon...</p>
             </CardContent>
           </Card>
         </TabsContent>
