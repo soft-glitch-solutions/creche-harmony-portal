@@ -1,232 +1,209 @@
 
-import { Card } from "@/components/ui/card";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DateRange } from "react-day-picker";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
-  LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer 
-} from 'recharts';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DatePickerWithRange } from "@/components/ui/date-range-picker";
-import { addDays } from "date-fns";
-import { useState } from "react";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#FF99E6'];
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 
 const FinancialOverview = () => {
-  const [dateRange, setDateRange] = useState({
-    from: addDays(new Date(), -30),
-    to: new Date(),
-  });
-  const [selectedCreche, setSelectedCreche] = useState<string>('all');
-
-  const { data: creches } = useQuery({
-    queryKey: ['creches'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('creches')
-        .select('*');
-      if (error) throw error;
-      return data || [];
-    },
+  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
+    from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+    to: new Date()
   });
 
-  const { data: invoices } = useQuery({
-    queryKey: ['invoices', dateRange, selectedCreche],
+  const { data: financialData, isLoading } = useQuery({
+    queryKey: ["financial-overview", dateRange],
     queryFn: async () => {
-      let query = supabase
-        .from('invoices')
+      // Fetch invoice data for the selected date range
+      const { data: invoices, error } = await supabase
+        .from("invoices")
         .select(`
           *,
-          creches (
-            name
-          )
+          creche:creche_id(name)
         `)
         .gte('created_at', dateRange.from.toISOString())
-        .lte('created_at', dateRange.to.toISOString());
+        .lte('created_at', dateRange.to.toISOString())
+        .order('created_at', { ascending: true });
 
-      if (selectedCreche !== 'all') {
-        query = query.eq('creche_id', selectedCreche);
-      }
-
-      const { data, error } = await query;
       if (error) throw error;
-      return data || [];
+
+      // Process data for charts
+      const monthlyRevenue = invoices?.reduce((acc: any[], invoice) => {
+        const month = new Date(invoice.created_at).toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'short' 
+        });
+        
+        const existing = acc.find(item => item.month === month);
+        if (existing) {
+          existing.revenue += invoice.amount;
+        } else {
+          acc.push({
+            month,
+            revenue: invoice.amount,
+          });
+        }
+        return acc;
+      }, []) || [];
+
+      // Revenue by creche
+      const revenueByCreche = invoices?.reduce((acc: any[], invoice) => {
+        const crecheName = invoice.creche?.name || 'Unknown';
+        
+        const existing = acc.find(item => item.name === crecheName);
+        if (existing) {
+          existing.value += invoice.amount;
+        } else {
+          acc.push({
+            name: crecheName,
+            value: invoice.amount,
+          });
+        }
+        return acc;
+      }, []) || [];
+
+      const totalRevenue = invoices?.reduce((sum, invoice) => sum + invoice.amount, 0) || 0;
+      const totalInvoices = invoices?.length || 0;
+      const averageInvoiceAmount = totalInvoices > 0 ? totalRevenue / totalInvoices : 0;
+
+      return {
+        monthlyRevenue,
+        revenueByCreche,
+        totalRevenue,
+        totalInvoices,
+        averageInvoiceAmount,
+      };
     },
   });
 
-  // Calculate financial metrics
-  const totalRevenue = invoices?.reduce((sum, invoice) => sum + (Number(invoice.total_amount) || 0), 0) || 0;
-  const averageInvoiceAmount = totalRevenue / (invoices?.length || 1);
-  const paidInvoices = invoices?.filter(inv => inv.status === 'paid').length || 0;
-  const pendingInvoices = invoices?.filter(inv => inv.status === 'pending').length || 0;
+  const handleDateRangeChange = (date: DateRange | undefined) => {
+    if (date?.from && date?.to) {
+      setDateRange({ from: date.from, to: date.to });
+    }
+  };
 
-  // Revenue by creche
-  const revenueByCreche = invoices?.reduce((acc, invoice) => {
-    const crecheName = invoice.creches?.name || 'Unknown';
-    acc[crecheName] = (acc[crecheName] || 0) + Number(invoice.total_amount || 0);
-    return acc;
-  }, {} as Record<string, number>);
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
-  const revenueByChecheData = Object.entries(revenueByCreche || {}).map(([name, value]) => ({
-    name,
-    revenue: value
-  }));
-
-  // Monthly revenue trend
-  const monthlyRevenue = invoices?.reduce((acc, invoice) => {
-    const month = new Date(invoice.created_at).toLocaleString('default', { month: 'short' });
-    acc[month] = (acc[month] || 0) + Number(invoice.total_amount || 0);
-    return acc;
-  }, {} as Record<string, number>);
-
-  const monthlyRevenueData = Object.entries(monthlyRevenue || {}).map(([month, revenue]) => ({
-    month,
-    revenue
-  }));
-
-  // Invoice status distribution
-  const invoiceStatusData = [
-    { name: 'Paid', value: paidInvoices },
-    { name: 'Pending', value: pendingInvoices },
-  ];
+  if (isLoading) {
+    return (
+      <div className="min-h-screen pt-20 px-8">
+        <h1 className="text-2xl font-bold mb-8">Financial Overview</h1>
+        <div className="animate-pulse">Loading financial data...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-8 pt-20">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Financial Overview</h1>
-        <div className="flex gap-4">
-          <Select value={selectedCreche} onValueChange={setSelectedCreche}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Select creche" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Creches</SelectItem>
-              {creches?.map((creche) => (
-                <SelectItem key={creche.id} value={creche.id}>
-                  {creche.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <DatePickerWithRange date={dateRange} setDate={setDateRange} />
-        </div>
+    <div className="min-h-screen pt-20 px-8">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-2xl font-bold">Financial Overview</h1>
+        <DateRangePicker
+          date={{
+            from: dateRange.from,
+            to: dateRange.to,
+          }}
+          onDateChange={handleDateRangeChange}
+        />
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card className="p-4">
-          <h3 className="text-sm font-medium text-gray-500">Total Revenue</h3>
-          <p className="text-2xl font-bold">R{totalRevenue.toFixed(2)}</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              R{financialData?.totalRevenue?.toLocaleString() || 0}
+            </div>
+          </CardContent>
         </Card>
-        <Card className="p-4">
-          <h3 className="text-sm font-medium text-gray-500">Average Invoice Amount</h3>
-          <p className="text-2xl font-bold">R{averageInvoiceAmount.toFixed(2)}</p>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Total Invoices</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {financialData?.totalInvoices || 0}
+            </div>
+          </CardContent>
         </Card>
-        <Card className="p-4">
-          <h3 className="text-sm font-medium text-gray-500">Paid Invoices</h3>
-          <p className="text-2xl font-bold">{paidInvoices}</p>
-        </Card>
-        <Card className="p-4">
-          <h3 className="text-sm font-medium text-gray-500">Pending Invoices</h3>
-          <p className="text-2xl font-bold">{pendingInvoices}</p>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Average Invoice</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              R{financialData?.averageInvoiceAmount?.toFixed(2) || 0}
+            </div>
+          </CardContent>
         </Card>
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Revenue by Creche</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={revenueByChecheData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="revenue" fill="#8884d8" />
-            </BarChart>
-          </ResponsiveContainer>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Monthly Revenue Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Monthly Revenue</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={financialData?.monthlyRevenue || []}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip formatter={(value: any) => [`R${value.toLocaleString()}`, 'Revenue']} />
+                <Legend />
+                <Bar dataKey="revenue" fill="#8884d8" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
         </Card>
 
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Monthly Revenue Trend</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={monthlyRevenueData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="revenue" stroke="#8884d8" />
-            </LineChart>
-          </ResponsiveContainer>
-        </Card>
-
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Invoice Status Distribution</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={invoiceStatusData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {invoiceStatusData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
+        {/* Revenue by Creche */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Revenue by Creche</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={financialData?.revenueByCreche || []}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {(financialData?.revenueByCreche || []).map((entry: any, index: number) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value: any) => [`R${value.toLocaleString()}`, 'Revenue']} />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
         </Card>
       </div>
-
-      {/* Recent Invoices Table */}
-      <Card className="p-6">
-        <h2 className="text-lg font-semibold mb-4">Recent Invoices</h2>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Invoice ID</TableHead>
-              <TableHead>Creche</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Date</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {invoices?.slice(0, 10).map((invoice) => (
-              <TableRow key={invoice.id}>
-                <TableCell className="font-medium">{invoice.id.slice(0, 8)}</TableCell>
-                <TableCell>{invoice.creches?.name}</TableCell>
-                <TableCell>R{Number(invoice.total_amount).toFixed(2)}</TableCell>
-                <TableCell>
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    invoice.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {invoice.status}
-                  </span>
-                </TableCell>
-                <TableCell>{new Date(invoice.created_at).toLocaleDateString()}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
     </div>
   );
 };

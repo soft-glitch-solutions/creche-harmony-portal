@@ -51,7 +51,7 @@ const FeatureManagement = () => {
     if (!selectedCreche) return;
 
     try {
-      const currentFeatures = selectedCrecheData?.features || {};
+      const currentFeatures = selectedCrecheData?.features as Record<string, boolean> || {};
       const updatedFeatures = {
         ...currentFeatures,
         [feature]: enabled
@@ -118,16 +118,19 @@ const FeatureManagement = () => {
                   Features for {selectedCrecheData.name}
                 </h3>
                 <div className="grid gap-4">
-                  {features.map((feature) => (
-                    <div key={feature.key} className="flex items-center justify-between">
-                      <Label htmlFor={feature.key}>{feature.label}</Label>
-                      <Switch
-                        id={feature.key}
-                        checked={selectedCrecheData.features?.[feature.key] || false}
-                        onCheckedChange={(checked) => handleFeatureToggle(feature.key, checked)}
-                      />
-                    </div>
-                  ))}
+                  {features.map((feature) => {
+                    const featuresObj = selectedCrecheData.features as Record<string, boolean> || {};
+                    return (
+                      <div key={feature.key} className="flex items-center justify-between">
+                        <Label htmlFor={feature.key}>{feature.label}</Label>
+                        <Switch
+                          id={feature.key}
+                          checked={featuresObj[feature.key] || false}
+                          onCheckedChange={(checked) => handleFeatureToggle(feature.key, checked)}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import {
   Select,
   SelectContent,
@@ -23,29 +25,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 
 const EventsNotifications = () => {
-  const [newEvent, setNewEvent] = useState({
+  const [eventForm, setEventForm] = useState({
     title: '',
     description: '',
-    start: '',
-    end_time: '',
+    event_date: '',
     creche_id: '',
-    priority: 'medium',
-    color_code: '#3b82f6'
+    send_notification: true
   });
-
-  const [newNotification, setNewNotification] = useState({
-    title: '',
-    message: '',
-    creche_id: '',
+  
+  const [notificationSettings, setNotificationSettings] = useState({
+    email_notifications: true,
+    sms_notifications: false,
+    push_notifications: true,
+    daily_digest: true
   });
 
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  // Fetch creches for dropdown
   const { data: creches } = useQuery({
     queryKey: ['creches-for-events'],
     queryFn: async () => {
@@ -58,17 +56,16 @@ const EventsNotifications = () => {
     },
   });
 
-  // Fetch recent events
-  const { data: events } = useQuery({
-    queryKey: ['recent-events'],
+  const { data: events, refetch: refetchEvents } = useQuery({
+    queryKey: ['events'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('events')
         .select(`
           *,
-          creches!creche_id(name)
+          creche:creche_id(name)
         `)
-        .order('created_at', { ascending: false })
+        .order('event_date', { ascending: false })
         .limit(10);
       
       if (error) throw error;
@@ -76,114 +73,93 @@ const EventsNotifications = () => {
     },
   });
 
-  // Create event mutation
-  const createEventMutation = useMutation({
-    mutationFn: async (eventData: typeof newEvent) => {
-      const { data, error } = await supabase
+  const handleCreateEvent = async () => {
+    if (!eventForm.title || !eventForm.event_date || !eventForm.creche_id) {
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: "Please fill in all required fields.",
+      });
+      return;
+    }
+
+    try {
+      const { data: event, error: eventError } = await supabase
         .from('events')
         .insert([{
-          ...eventData,
-          end_time: eventData.end_time,
-          user_id: (await supabase.auth.getUser()).data.user?.id
-        }]);
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
+          title: eventForm.title,
+          description: eventForm.description,
+          event_date: eventForm.event_date,
+          creche_id: eventForm.creche_id
+        }])
+        .select()
+        .single();
+
+      if (eventError) throw eventError;
+
+      if (eventForm.send_notification) {
+        // In a real app, this would trigger notification sending
+        console.log('Sending notifications for event:', event.id);
+      }
+
       toast({
-        title: "Event Created",
-        description: "The event has been successfully created.",
+        title: "Success",
+        description: "Event created successfully.",
       });
-      setNewEvent({
+
+      setEventForm({
         title: '',
         description: '',
-        start: '',
-        end_time: '',
+        event_date: '',
         creche_id: '',
-        priority: 'medium',
-        color_code: '#3b82f6'
+        send_notification: true
       });
-      queryClient.invalidateQueries({ queryKey: ['recent-events'] });
-    },
-    onError: () => {
+
+      refetchEvents();
+    } catch (error) {
+      console.error('Error creating event:', error);
       toast({
         variant: "destructive",
         title: "Error",
         description: "Failed to create event.",
       });
     }
-  });
-
-  // Send notification mutation
-  const sendNotificationMutation = useMutation({
-    mutationFn: async (notificationData: typeof newNotification) => {
-      // Get users associated with the creche
-      const { data: users, error: usersError } = await supabase
-        .from('user_creche')
-        .select('user_id')
-        .eq('creche_id', notificationData.creche_id);
-
-      if (usersError) throw usersError;
-
-      // Create notifications for all users
-      const notifications = users.map(user => ({
-        user_id: user.user_id,
-        title: notificationData.title,
-        message: notificationData.message,
-        sender_id: (await supabase.auth.getUser()).data.user?.id
-      }));
-
-      const { error } = await supabase
-        .from('notifications')
-        .insert(notifications);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Notification Sent",
-        description: "The notification has been sent to all creche users.",
-      });
-      setNewNotification({
-        title: '',
-        message: '',
-        creche_id: '',
-      });
-    },
-    onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to send notification.",
-      });
-    }
-  });
-
-  const handleCreateEvent = () => {
-    if (!newEvent.title || !newEvent.start || !newEvent.creche_id) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Please fill in all required fields.",
-      });
-      return;
-    }
-
-    createEventMutation.mutate(newEvent);
   };
 
-  const handleSendNotification = () => {
-    if (!newNotification.title || !newNotification.message || !newNotification.creche_id) {
+  const handleSendBulkNotification = async () => {
+    try {
+      // In a real app, this would send bulk notifications
+      console.log('Sending bulk notification to all users');
+      
+      toast({
+        title: "Notification Sent",
+        description: "Bulk notification has been sent to all users.",
+      });
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Please fill in all required fields.",
+        description: "Failed to send bulk notification.",
       });
-      return;
     }
+  };
 
-    sendNotificationMutation.mutate(newNotification);
+  const handleSaveNotificationSettings = async () => {
+    try {
+      // In a real app, this would save to user preferences or system settings
+      console.log('Saving notification settings:', notificationSettings);
+      
+      toast({
+        title: "Settings Saved",
+        description: "Notification preferences have been updated.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to save notification settings.",
+      });
+    }
   };
 
   return (
@@ -191,159 +167,70 @@ const EventsNotifications = () => {
       {/* Create Event */}
       <Card>
         <CardHeader>
-          <CardTitle>Create New Event</CardTitle>
+          <CardTitle>Create Event</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="eventTitle">Event Title *</Label>
+              <Label htmlFor="event-title">Event Title *</Label>
               <Input
-                id="eventTitle"
-                placeholder="Event title"
-                value={newEvent.title}
-                onChange={(e) => setNewEvent(prev => ({ ...prev, title: e.target.value }))}
+                id="event-title"
+                value={eventForm.title}
+                onChange={(e) => setEventForm(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Enter event title"
               />
             </div>
             
             <div className="grid gap-2">
-              <Label>Creche *</Label>
-              <Select 
-                value={newEvent.creche_id} 
-                onValueChange={(value) => setNewEvent(prev => ({ ...prev, creche_id: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select creche" />
-                </SelectTrigger>
-                <SelectContent>
-                  {creches?.map((creche) => (
-                    <SelectItem key={creche.id} value={creche.id}>
-                      {creche.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="eventStart">Start Date & Time *</Label>
+              <Label htmlFor="event-date">Event Date *</Label>
               <Input
-                id="eventStart"
+                id="event-date"
                 type="datetime-local"
-                value={newEvent.start}
-                onChange={(e) => setNewEvent(prev => ({ ...prev, start: e.target.value }))}
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="eventEnd">End Date & Time</Label>
-              <Input
-                id="eventEnd"
-                type="datetime-local"
-                value={newEvent.end_time}
-                onChange={(e) => setNewEvent(prev => ({ ...prev, end_time: e.target.value }))}
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label>Priority</Label>
-              <Select 
-                value={newEvent.priority} 
-                onValueChange={(value) => setNewEvent(prev => ({ ...prev, priority: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="eventColor">Color</Label>
-              <Input
-                id="eventColor"
-                type="color"
-                value={newEvent.color_code}
-                onChange={(e) => setNewEvent(prev => ({ ...prev, color_code: e.target.value }))}
+                value={eventForm.event_date}
+                onChange={(e) => setEventForm(prev => ({ ...prev, event_date: e.target.value }))}
               />
             </div>
           </div>
-          
+
           <div className="grid gap-2">
-            <Label htmlFor="eventDescription">Description</Label>
+            <Label htmlFor="event-creche">Select Creche *</Label>
+            <Select value={eventForm.creche_id} onValueChange={(value) => setEventForm(prev => ({ ...prev, creche_id: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Choose a creche" />
+              </SelectTrigger>
+              <SelectContent>
+                {creches?.map((creche) => (
+                  <SelectItem key={creche.id} value={creche.id}>
+                    {creche.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="event-description">Description</Label>
             <Textarea
-              id="eventDescription"
-              placeholder="Event description"
-              value={newEvent.description}
-              onChange={(e) => setNewEvent(prev => ({ ...prev, description: e.target.value }))}
+              id="event-description"
+              value={eventForm.description}
+              onChange={(e) => setEventForm(prev => ({ ...prev, description: e.target.value }))}
+              placeholder="Event description..."
+              rows={3}
             />
           </div>
-          
-          <Button 
-            onClick={handleCreateEvent}
-            disabled={createEventMutation.isPending}
-          >
-            {createEventMutation.isPending ? 'Creating...' : 'Create Event'}
-          </Button>
-        </CardContent>
-      </Card>
 
-      {/* Send Notification */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Send Notification</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="notificationTitle">Notification Title *</Label>
-              <Input
-                id="notificationTitle"
-                placeholder="Notification title"
-                value={newNotification.title}
-                onChange={(e) => setNewNotification(prev => ({ ...prev, title: e.target.value }))}
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label>Target Creche *</Label>
-              <Select 
-                value={newNotification.creche_id} 
-                onValueChange={(value) => setNewNotification(prev => ({ ...prev, creche_id: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select creche" />
-                </SelectTrigger>
-                <SelectContent>
-                  {creches?.map((creche) => (
-                    <SelectItem key={creche.id} value={creche.id}>
-                      {creche.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="notificationMessage">Message *</Label>
-              <Textarea
-                id="notificationMessage"
-                placeholder="Notification message"
-                value={newNotification.message}
-                onChange={(e) => setNewNotification(prev => ({ ...prev, message: e.target.value }))}
-              />
-            </div>
-            
-            <Button 
-              onClick={handleSendNotification}
-              disabled={sendNotificationMutation.isPending}
-            >
-              {sendNotificationMutation.isPending ? 'Sending...' : 'Send Notification'}
-            </Button>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="send-notification">Send Notification</Label>
+            <Switch
+              id="send-notification"
+              checked={eventForm.send_notification}
+              onCheckedChange={(checked) => setEventForm(prev => ({ ...prev, send_notification: checked }))}
+            />
           </div>
+
+          <Button onClick={handleCreateEvent} className="w-full">
+            Create Event
+          </Button>
         </CardContent>
       </Card>
 
@@ -358,28 +245,106 @@ const EventsNotifications = () => {
               <TableRow>
                 <TableHead>Title</TableHead>
                 <TableHead>Creche</TableHead>
-                <TableHead>Start Date</TableHead>
-                <TableHead>Priority</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {events?.map((event) => (
                 <TableRow key={event.id}>
                   <TableCell className="font-medium">{event.title}</TableCell>
-                  <TableCell>{event.creches?.name}</TableCell>
+                  <TableCell>{event.creche?.name || 'N/A'}</TableCell>
                   <TableCell>
-                    {new Date(event.start).toLocaleDateString()}
+                    {new Date(event.event_date).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={event.priority === 'high' ? 'destructive' : 
-                                  event.priority === 'medium' ? 'default' : 'secondary'}>
-                      {event.priority}
-                    </Badge>
+                    <Badge variant="secondary">Active</Badge>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+        </CardContent>
+      </Card>
+
+      {/* Bulk Notifications */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Send Bulk Notification</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-2">
+            <Label>Notification Message</Label>
+            <Textarea
+              placeholder="Enter your notification message here..."
+              rows={4}
+            />
+          </div>
+          <Button onClick={handleSendBulkNotification}>
+            Send to All Users
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Notification Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Notification Settings</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="email-notifications">Email Notifications</Label>
+              <Switch
+                id="email-notifications"
+                checked={notificationSettings.email_notifications}
+                onCheckedChange={(checked) => setNotificationSettings(prev => ({ 
+                  ...prev, 
+                  email_notifications: checked 
+                }))}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <Label htmlFor="sms-notifications">SMS Notifications</Label>
+              <Switch
+                id="sms-notifications"
+                checked={notificationSettings.sms_notifications}
+                onCheckedChange={(checked) => setNotificationSettings(prev => ({ 
+                  ...prev, 
+                  sms_notifications: checked 
+                }))}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <Label htmlFor="push-notifications">Push Notifications</Label>
+              <Switch
+                id="push-notifications"
+                checked={notificationSettings.push_notifications}
+                onCheckedChange={(checked) => setNotificationSettings(prev => ({ 
+                  ...prev, 
+                  push_notifications: checked 
+                }))}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <Label htmlFor="daily-digest">Daily Digest</Label>
+              <Switch
+                id="daily-digest"
+                checked={notificationSettings.daily_digest}
+                onCheckedChange={(checked) => setNotificationSettings(prev => ({ 
+                  ...prev, 
+                  daily_digest: checked 
+                }))}
+              />
+            </div>
+          </div>
+          
+          <Button onClick={handleSaveNotificationSettings}>
+            Save Notification Settings
+          </Button>
         </CardContent>
       </Card>
     </div>

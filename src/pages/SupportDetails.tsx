@@ -56,14 +56,15 @@ const SupportDetails = () => {
     if (!newNote.trim()) return;
 
     try {
+      const { data: currentUser } = await supabase.auth.getUser();
+      
       const { error } = await supabase
         .from("ticket_notes")
-        .insert([
-          {
-            ticket_id: id,
-            note: newNote,
-          },
-        ]);
+        .insert({
+          ticket_id: id,
+          note: newNote,
+          user_id: currentUser.user?.id || '',
+        });
 
       if (error) throw error;
 
