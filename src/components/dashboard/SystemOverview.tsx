@@ -26,6 +26,12 @@ export const SystemOverview = () => {
       const totalCapacity = creches.reduce((sum, c) => sum + (c.capacity || 0), 0);
       const utilizationRate = totalCapacity > 0 ? (students.length / totalCapacity * 100) : 0;
 
+      // Calculate active users based on recent activity (last 30 days)
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const activeUsers = users.filter(u => 
+        u.updated_at && new Date(u.updated_at) > new Date(thirtyDaysAgo)
+      ).length;
+
       return {
         totalCreches: creches.length,
         registeredCreches,
@@ -35,9 +41,7 @@ export const SystemOverview = () => {
         pendingApplications,
         utilizationRate,
         totalCapacity,
-        activeUsers: users.filter(u => u.last_sign_in_at && 
-          new Date(u.last_sign_in_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-        ).length
+        activeUsers
       };
     }
   });
@@ -61,7 +65,7 @@ export const SystemOverview = () => {
       title: "System Users",
       value: systemStats?.totalUsers || 0,
       icon: UserCheck,
-      description: `${systemStats?.activeUsers || 0} active this week`,
+      description: `${systemStats?.activeUsers || 0} active this month`,
       color: "text-purple-600"
     },
     {
