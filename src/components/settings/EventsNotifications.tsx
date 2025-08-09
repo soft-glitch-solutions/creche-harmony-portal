@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,7 +29,8 @@ const EventsNotifications = () => {
   const [eventForm, setEventForm] = useState({
     title: '',
     description: '',
-    event_date: '',
+    start: '',
+    end_time: '',
     creche_id: '',
     send_notification: true
   });
@@ -65,7 +65,7 @@ const EventsNotifications = () => {
           *,
           creche:creche_id(name)
         `)
-        .order('event_date', { ascending: false })
+        .order('start', { ascending: false })
         .limit(10);
       
       if (error) throw error;
@@ -74,7 +74,7 @@ const EventsNotifications = () => {
   });
 
   const handleCreateEvent = async () => {
-    if (!eventForm.title || !eventForm.event_date || !eventForm.creche_id) {
+    if (!eventForm.title || !eventForm.start || !eventForm.creche_id) {
       toast({
         variant: "destructive",
         title: "Validation Error",
@@ -89,7 +89,8 @@ const EventsNotifications = () => {
         .insert([{
           title: eventForm.title,
           description: eventForm.description,
-          event_date: eventForm.event_date,
+          start: eventForm.start,
+          end_time: eventForm.end_time || eventForm.start,
           creche_id: eventForm.creche_id
         }])
         .select()
@@ -98,7 +99,6 @@ const EventsNotifications = () => {
       if (eventError) throw eventError;
 
       if (eventForm.send_notification) {
-        // In a real app, this would trigger notification sending
         console.log('Sending notifications for event:', event.id);
       }
 
@@ -110,7 +110,8 @@ const EventsNotifications = () => {
       setEventForm({
         title: '',
         description: '',
-        event_date: '',
+        start: '',
+        end_time: '',
         creche_id: '',
         send_notification: true
       });
@@ -164,7 +165,6 @@ const EventsNotifications = () => {
 
   return (
     <div className="space-y-6">
-      {/* Create Event */}
       <Card>
         <CardHeader>
           <CardTitle>Create Event</CardTitle>
@@ -182,14 +182,24 @@ const EventsNotifications = () => {
             </div>
             
             <div className="grid gap-2">
-              <Label htmlFor="event-date">Event Date *</Label>
+              <Label htmlFor="event-start">Start Date *</Label>
               <Input
-                id="event-date"
+                id="event-start"
                 type="datetime-local"
-                value={eventForm.event_date}
-                onChange={(e) => setEventForm(prev => ({ ...prev, event_date: e.target.value }))}
+                value={eventForm.start}
+                onChange={(e) => setEventForm(prev => ({ ...prev, start: e.target.value }))}
               />
             </div>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="event-end">End Date</Label>
+            <Input
+              id="event-end"
+              type="datetime-local"
+              value={eventForm.end_time}
+              onChange={(e) => setEventForm(prev => ({ ...prev, end_time: e.target.value }))}
+            />
           </div>
 
           <div className="grid gap-2">
@@ -234,7 +244,6 @@ const EventsNotifications = () => {
         </CardContent>
       </Card>
 
-      {/* Recent Events */}
       <Card>
         <CardHeader>
           <CardTitle>Recent Events</CardTitle>
@@ -255,7 +264,7 @@ const EventsNotifications = () => {
                   <TableCell className="font-medium">{event.title}</TableCell>
                   <TableCell>{event.creche?.name || 'N/A'}</TableCell>
                   <TableCell>
-                    {new Date(event.event_date).toLocaleDateString()}
+                    {new Date(event.start).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
                     <Badge variant="secondary">Active</Badge>
@@ -267,7 +276,6 @@ const EventsNotifications = () => {
         </CardContent>
       </Card>
 
-      {/* Bulk Notifications */}
       <Card>
         <CardHeader>
           <CardTitle>Send Bulk Notification</CardTitle>
@@ -286,7 +294,6 @@ const EventsNotifications = () => {
         </CardContent>
       </Card>
 
-      {/* Notification Settings */}
       <Card>
         <CardHeader>
           <CardTitle>Notification Settings</CardTitle>

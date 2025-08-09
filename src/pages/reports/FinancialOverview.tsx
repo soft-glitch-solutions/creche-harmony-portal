@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DateRange } from "react-day-picker";
@@ -28,7 +27,6 @@ const FinancialOverview = () => {
   const { data: financialData, isLoading } = useQuery({
     queryKey: ["financial-overview", dateRange],
     queryFn: async () => {
-      // Fetch invoice data for the selected date range
       const { data: invoices, error } = await supabase
         .from("invoices")
         .select(`
@@ -41,7 +39,7 @@ const FinancialOverview = () => {
 
       if (error) throw error;
 
-      // Process data for charts
+      // Process data for charts using total_amount field
       const monthlyRevenue = invoices?.reduce((acc: any[], invoice) => {
         const month = new Date(invoice.created_at).toLocaleDateString('en-US', { 
           year: 'numeric', 
@@ -50,33 +48,33 @@ const FinancialOverview = () => {
         
         const existing = acc.find(item => item.month === month);
         if (existing) {
-          existing.revenue += invoice.amount;
+          existing.revenue += invoice.total_amount;
         } else {
           acc.push({
             month,
-            revenue: invoice.amount,
+            revenue: invoice.total_amount,
           });
         }
         return acc;
       }, []) || [];
 
-      // Revenue by creche
+      // Revenue by creche using total_amount field
       const revenueByCreche = invoices?.reduce((acc: any[], invoice) => {
         const crecheName = invoice.creche?.name || 'Unknown';
         
         const existing = acc.find(item => item.name === crecheName);
         if (existing) {
-          existing.value += invoice.amount;
+          existing.value += invoice.total_amount;
         } else {
           acc.push({
             name: crecheName,
-            value: invoice.amount,
+            value: invoice.total_amount,
           });
         }
         return acc;
       }, []) || [];
 
-      const totalRevenue = invoices?.reduce((sum, invoice) => sum + invoice.amount, 0) || 0;
+      const totalRevenue = invoices?.reduce((sum, invoice) => sum + invoice.total_amount, 0) || 0;
       const totalInvoices = invoices?.length || 0;
       const averageInvoiceAmount = totalInvoices > 0 ? totalRevenue / totalInvoices : 0;
 
