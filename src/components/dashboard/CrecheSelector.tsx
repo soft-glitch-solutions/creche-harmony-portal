@@ -53,12 +53,12 @@ export const CrecheSelector = ({ onCrecheSelect, selectedCreche }: CrecheSelecto
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <div className="flex-1">
-          <Select value={selectedCreche || ""} onValueChange={(value) => onCrecheSelect(value || null)}>
+          <Select value={selectedCreche || "all"} onValueChange={(value) => onCrecheSelect(value === "all" ? null : value)}>
             <SelectTrigger>
               <SelectValue placeholder="Select a creche to view details" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Creches</SelectItem>
+              <SelectItem value="all">All Creches</SelectItem>
               {creches?.map((creche) => (
                 <SelectItem key={creche.id} value={creche.id}>
                   <div className="flex items-center gap-2">
