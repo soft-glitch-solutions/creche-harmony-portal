@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -115,7 +114,7 @@ const CrehePerformance = () => {
   ];
 
   return (
-    <div className="p-8 pt-20">
+    <div className="p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Creche Performance Analytics</h1>

@@ -1,11 +1,16 @@
+
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ExternalLink, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { CrecheSettingsTab } from "@/components/creche/CrecheSettingsTab";
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 const CreheDetails = () => {
   const { id } = useParams();
@@ -58,6 +63,40 @@ const CreheDetails = () => {
     },
   });
 
+  const { data: applications } = useQuery({
+    queryKey: ["creche-applications", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("applications")
+        .select("*")
+        .eq("creche_id", id);
+
+      if (error) {
+        console.error("Error fetching applications:", error);
+        return [];
+      }
+
+      return data;
+    },
+  });
+
+  const { data: invoices } = useQuery({
+    queryKey: ["creche-invoices", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("invoices")
+        .select("*")
+        .eq("creche_id", id);
+
+      if (error) {
+        console.error("Error fetching invoices:", error);
+        return [];
+      }
+
+      return data;
+    },
+  });
+
   if (crecheLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -67,11 +106,33 @@ const CreheDetails = () => {
   }
 
   if (!creche) {
-    return <div>Creche not found</div>;
+    return <div className="p-6">Creche not found</div>;
   }
 
+  // Calculate analytics data
+  const totalRevenue = invoices?.reduce((sum, inv) => sum + Number(inv.total_amount || 0), 0) || 0;
+  const pendingApplications = applications?.filter(app => app.application_status === 'New').length || 0;
+  const utilization = creche.capacity ? Math.round((students?.length || 0) / creche.capacity * 100) : 0;
+
+  // Status distribution for pie chart
+  const statusData = [
+    { name: 'Active Students', value: students?.length || 0 },
+    { name: 'Pending Applications', value: pendingApplications },
+    { name: 'Available Spots', value: Math.max(0, (creche.capacity || 0) - (students?.length || 0)) }
+  ].filter(item => item.value > 0);
+
+  // Monthly enrollment trend (mock data for now)
+  const enrollmentTrend = [
+    { month: 'Jan', students: (students?.length || 0) - 10 },
+    { month: 'Feb', students: (students?.length || 0) - 8 },
+    { month: 'Mar', students: (students?.length || 0) - 5 },
+    { month: 'Apr', students: (students?.length || 0) - 2 },
+    { month: 'May', students: (students?.length || 0) - 1 },
+    { month: 'Jun', students: students?.length || 0 }
+  ];
+
   return (
-    <div className="container mx-auto p-6 pt-20">
+    <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">{creche.name}</h1>
         <Button asChild variant="outline">
@@ -89,9 +150,11 @@ const CreheDetails = () => {
       <Tabs defaultValue="general" className="space-y-4">
         <TabsList>
           <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="financial">Financial</TabsTrigger>
           <TabsTrigger value="students">Students</TabsTrigger>
           <TabsTrigger value="compliance">Compliance</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general">
@@ -126,6 +189,104 @@ const CreheDetails = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="analytics">
+          <div className="space-y-6">
+            {/* Key Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">Students</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{students?.length || 0}</div>
+                  <p className="text-xs text-muted-foreground">of {creche.capacity} capacity</p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">Utilization</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{utilization}%</div>
+                  <p className="text-xs text-muted-foreground">Capacity used</p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">Revenue</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">R{totalRevenue.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground">Total invoiced</p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">Applications</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{applications?.length || 0}</div>
+                  <p className="text-xs text-muted-foreground">{pendingApplications} pending</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Enrollment Trend</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={enrollmentTrend}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="students" fill="#8884d8" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Capacity Overview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={statusData}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={80}
+                          fill="#8884d8"
+                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        >
+                          {statusData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="financial">
@@ -230,6 +391,10 @@ const CreheDetails = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="settings">
+          <CrecheSettingsTab crecheId={id!} />
         </TabsContent>
       </Tabs>
     </div>
